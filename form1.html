@@ -1,0 +1,411 @@
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Анализатор безопасности веб-сайтов</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --accent-color: #e74c3c;
+            --light-color: #ecf0f1;
+            --dark-color: #34495e;
+            --success-color: #27ae60;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--primary-color), var(--dark-color));
+            color: white;
+            padding: 2rem 0;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .container {
+            width: 90%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem 0;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        h2 {
+            font-size: 2rem;
+            margin-bottom: 1.5rem;
+            color: var(--primary-color);
+            border-bottom: 2px solid var(--secondary-color);
+            padding-bottom: 0.5rem;
+        }
+
+        h3 {
+            font-size: 1.5rem;
+            margin: 1.5rem 0 1rem;
+            color: var(--dark-color);
+        }
+
+        .authors {
+            font-style: italic;
+            margin-bottom: 1rem;
+        }
+
+        .section {
+            background: white;
+            border-radius: 8px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .problem-list, .task-list {
+            padding-left: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .problem-list li, .task-list li {
+            margin-bottom: 0.5rem;
+        }
+
+        .analysis-form {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 1rem;
+        }
+
+        input[type="url"] {
+            flex: 1;
+            padding: 0.75rem 1rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+
+        button {
+            background-color: var(--secondary-color);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #2980b9;
+        }
+
+        .results {
+            display: none;
+            margin-top: 2rem;
+            padding: 1.5rem;
+            background-color: var(--light-color);
+            border-radius: 8px;
+            border-left: 4px solid var(--secondary-color);
+        }
+
+        .result-item {
+            margin-bottom: 1.5rem;
+        }
+
+        .result-title {
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+            color: var(--dark-color);
+        }
+
+        .recommendations {
+            background-color: #e8f4fc;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-top: 1rem;
+        }
+
+        .dns-section {
+            margin-top: 2rem;
+        }
+
+        .dns-form {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .dns-servers {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .dns-server {
+            background-color: var(--light-color);
+            padding: 1rem;
+            border-radius: 4px;
+            text-align: center;
+        }
+
+        footer {
+            background-color: var(--primary-color);
+            color: white;
+            text-align: center;
+            padding: 1.5rem 0;
+            margin-top: 3rem;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 1rem 0;
+        }
+
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-left-color: var(--secondary-color);
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 768px) {
+            .input-group {
+                flex-direction: column;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            h2 {
+                font-size: 1.75rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>Анализатор безопасности веб-сайтов</h1>
+            <p class="authors">Авторы: Кульпинская Елена, Кононов Александр, Челноков Егор 10"Б"</p>
+            <p>ГБОУ г. Москвы «Школа № 1501»</p>
+        </div>
+    </header>
+
+    <div class="container">
+        <section class="section">
+            <h2>О проекте</h2>
+            <h3>Актуальность</h3>
+            <p>В современном мире, с ростом количества различных приложений, кибербезопасность становится критически важной для каждого пользователя и организаций. Количество веб-угроз постоянно растет: от распределенных атак на отказ в обслуживании (DDoS), до уязвимостей в коде сайтов, ведущих к утечке данных.</p>
+            <p>Многие владельцы небольших сайтов и начинающие разработчики не обладают достаточными знаниями и ресурсами для комплексной проверки и защиты своих ресурсов. Существуют профессиональные инструменты для проверки веб-приложений, но не все легко понять. При этом не существует универсального и доступного решения, которое объединяло бы в себе автоматизированный анализ, интеллектуальные рекомендации по защите и методы самостоятельной проверки.</p>
+            <p>Решение этой проблемы принесет практическую пользу, позволив пользователям быстро и без глубоких технических знаний оценить базовые риски безопасности веб-приложения.</p>
+
+            <h3>Проблема</h3>
+            <p>Отсутствие доступного и многофункционального программного обеспечения, позволяющего неподготовленным пользователям проводить комплексный первичный анализ безопасности веб-ресурсов и получать персонализированные рекомендации по их защите.</p>
+
+            <h3>Цель работы</h3>
+            <p>Разработать десктопное приложение на Python, предоставляющее комплекс инструментов для анализа безопасности веб-сайтов и выработки рекомендаций по их защите.</p>
+
+            <h3>Задачи</h3>
+            <ol class="task-list">
+                <li>Изучить принципы веб-скрапинга и парсинга для сбора данных о целевом веб-ресурсе.</li>
+                <li>Реализовать модуль анализа веб-сайта, который по предоставленной ссылке собирает ключевую информацию и формирует отчет.</li>
+                <li>Интегрировать в приложение доступное API нейросетевой модели для генерации рекомендаций по методам защиты на основе данных анализа.</li>
+                <li>Разработать модуль с методами самостоятельной проверки пользователем основных параметров безопасности.</li>
+                <li>Реализовать функционал для подключения DNS-серверов для одного из методов повышения устойчивости и конфиденциальности.</li>
+                <li>Провести тестирование работоспособности всех модулей приложения на примере тестовых веб-сайтов.</li>
+                <li>Разработать интуитивно понятный графический интерфейс для удобного взаимодействия пользователя с функционалом приложения.</li>
+            </ol>
+        </section>
+
+        <section class="section">
+            <h2>Анализ безопасности веб-сайта</h2>
+            <p>Введите URL веб-сайта для анализа его безопасности:</p>
+
+            <form class="analysis-form" id="analysisForm">
+                <div class="input-group">
+                    <input type="url" id="websiteUrl" placeholder="https://example.com" required>
+                    <button type="submit">Проанализировать</button>
+                </div>
+            </form>
+
+            <div class="loading" id="loadingIndicator">
+                <div class="spinner"></div>
+                <p>Анализ выполняется, пожалуйста подождите...</p>
+            </div>
+
+            <div class="results" id="analysisResults">
+                <h3>Результаты анализа</h3>
+
+                <div class="result-item">
+                    <div class="result-title">Общая информация</div>
+                    <div id="generalInfo">Загрузка...</div>
+                </div>
+
+                <div class="result-item">
+                    <div class="result-title">Обнаруженные уязвимости</div>
+                    <div id="vulnerabilities">Загрузка...</div>
+                </div>
+
+                <div class="result-item">
+                    <div class="result-title">Рекомендации по защите</div>
+                    <div class="recommendations" id="recommendations">Загрузка...</div>
+                </div>
+            </div>
+        </section>
+
+        <section class="section">
+            <h2>Методы самостоятельной проверки</h2>
+            <p>Здесь вы можете проверить основные параметры безопасности вашего веб-сайта:</p>
+
+            <div class="manual-checks">
+                <h3>Проверка SSL-сертификата</h3>
+                <p>Убедитесь, что ваш сайт использует действительный SSL-сертификат для шифрования данных.</p>
+
+                <h3>Проверка заголовков безопасности</h3>
+                <p>Убедитесь, что ваш сайт использует правильные заголовки безопасности, такие как Content Security Policy, X-Content-Type-Options и др.</p>
+
+                <h3>Проверка на наличие уязвимостей ввода</h3>
+                <p>Убедитесь, что все формы на вашем сайте проверяют и фильтруют пользовательский ввод для предотвращения XSS и SQL-инъекций.</p>
+            </div>
+        </section>
+
+        <section class="section dns-section">
+            <h2>Настройка DNS-серверов</h2>
+            <p>Использование безопасных DNS-серверов может повысить конфиденциальность и устойчивость вашего интернет-соединения.</p>
+
+            <form class="dns-form" id="dnsForm">
+                <div class="input-group">
+                    <input type="text" id="dnsServer" placeholder="Введите DNS-сервер (например, 1.1.1.1)" required>
+                    <button type="submit">Добавить DNS-сервер</button>
+                </div>
+            </form>
+
+            <h3>Рекомендуемые DNS-серверы</h3>
+            <div class="dns-servers" id="dnsServersList">
+                <div class="dns-server">
+                    <strong>Cloudflare</strong><br>
+                    1.1.1.1<br>
+                    1.0.0.1
+                </div>
+                <div class="dns-server">
+                    <strong>Google</strong><br>
+                    8.8.8.8<br>
+                    8.8.4.4
+                </div>
+                <div class="dns-server">
+                    <strong>Quad9</strong><br>
+                    9.9.9.9<br>
+                    149.112.112.112
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2023 Анализатор безопасности веб-сайтов. Все права защищены.</p>
+            <p>ГБОУ г. Москвы «Школа № 1501»</p>
+        </div>
+    </footer>
+
+    <script>
+        document.getElementById('analysisForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const url = document.getElementById('websiteUrl').value;
+            const loadingIndicator = document.getElementById('loadingIndicator');
+            const results = document.getElementById('analysisResults');
+
+            // Показываем индикатор загрузки
+            loadingIndicator.style.display = 'block';
+            results.style.display = 'none';
+
+            // Имитация анализа (в реальном приложении здесь был бы запрос к API)
+            setTimeout(function() {
+                // Скрываем индикатор загрузки
+                loadingIndicator.style.display = 'none';
+
+                // Заполняем результаты анализа
+                document.getElementById('generalInfo').innerHTML = `
+                    <p>Анализируемый сайт: <strong>${url}</strong></p>
+                    <p>Статус SSL: <span style="color: green;">Действительный сертификат</span></p>
+                    <p>Заголовки безопасности: <span style="color: orange;">Частично настроены</span></p>
+                    <p>Версия HTTP: HTTP/2</p>
+                `;
+
+                document.getElementById('vulnerabilities').innerHTML = `
+                    <ul>
+                        <li>Отсутствует заголовок Content-Security-Policy</li>
+                        <li>Форма обратной связи не проверяет ввод пользователя</li>
+                        <li>Версия WordPress устарела</li>
+                    </ul>
+                `;
+
+                document.getElementById('recommendations').innerHTML = `
+                    <ul>
+                        <li>Настройте заголовок Content-Security-Policy для предотвращения XSS-атак</li>
+                        <li>Реализуйте проверку ввода для всех форм на сайте</li>
+                        <li>Обновите WordPress до последней версии</li>
+                        <li>Установите WAF (Web Application Firewall) для дополнительной защиты</li>
+                        <li>Регулярно создавайте резервные копии сайта</li>
+                    </ul>
+                `;
+
+                // Показываем результаты
+                results.style.display = 'block';
+            }, 3000);
+        });
+
+        document.getElementById('dnsForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const dnsServer = document.getElementById('dnsServer').value;
+            const dnsServersList = document.getElementById('dnsServersList');
+
+            // Создаем новый элемент DNS-сервера
+            const newDnsServer = document.createElement('div');
+            newDnsServer.className = 'dns-server';
+            newDnsServer.innerHTML = `<strong>Пользовательский</strong><br>${dnsServer}`;
+
+            // Добавляем новый DNS-сервер в список
+            dnsServersList.appendChild(newDnsServer);
+
+            // Очищаем поле ввода
+            document.getElementById('dnsServer').value = '';
+
+            alert(`DNS-сервер ${dnsServer} добавлен в список рекомендаций!`);
+        });
+    </script>
+</body>
+</html>
