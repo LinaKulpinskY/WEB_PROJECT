@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -34,6 +33,25 @@
             padding: 2rem 0;
             text-align: center;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+
+        .nav-link {
+            position: absolute;
+            top: 2rem;
+            right: 2rem;
+            color: white;
+            text-decoration: none;
+            padding: 0.5rem 1.5rem;
+            border: 2px solid white;
+            border-radius: 4px;
+            transition: background-color 0.3s, color 0.3s;
+            font-weight: 500;
+        }
+
+        .nav-link:hover {
+            background-color: white;
+            color: var(--primary-color);
         }
 
         .container {
@@ -210,12 +228,19 @@
             h2 {
                 font-size: 1.75rem;
             }
+
+            .nav-link {
+                position: static;
+                display: inline-block;
+                margin-top: 1rem;
+            }
         }
     </style>
 </head>
 <body>
     <header>
         <div class="container">
+            <a href="/chat" class="nav-link">Чат с AI</a>
             <h1>Анализатор безопасности веб-сайтов</h1>
             <p class="authors">Авторы: Кульпинская Елена, Кононов Александр, Челноков Егор 10"Б"</p>
             <p>ГБОУ г. Москвы «Школа № 1501»</p>
@@ -252,36 +277,12 @@
             <h2>Анализ безопасности веб-сайта</h2>
             <p>Введите URL веб-сайта для анализа его безопасности:</p>
 
-            <form class="analysis-form" id="analysisForm">
+            <form class="analysis-form" id="analysisForm" action="/scan" method="POST">
                 <div class="input-group">
-                    <input type="url" id="websiteUrl" placeholder="https://example.com" required>
+                    <input type="url" id="websiteUrl" name="url" placeholder="https://example.com" required>
                     <button type="submit">Проанализировать</button>
                 </div>
             </form>
-
-            <div class="loading" id="loadingIndicator">
-                <div class="spinner"></div>
-                <p>Анализ выполняется, пожалуйста подождите...</p>
-            </div>
-
-            <div class="results" id="analysisResults">
-                <h3>Результаты анализа</h3>
-
-                <div class="result-item">
-                    <div class="result-title">Общая информация</div>
-                    <div id="generalInfo">Загрузка...</div>
-                </div>
-
-                <div class="result-item">
-                    <div class="result-title">Обнаруженные уязвимости</div>
-                    <div id="vulnerabilities">Загрузка...</div>
-                </div>
-
-                <div class="result-item">
-                    <div class="result-title">Рекомендации по защите</div>
-                    <div class="recommendations" id="recommendations">Загрузка...</div>
-                </div>
-            </div>
         </section>
 
         <section class="section">
@@ -340,53 +341,6 @@
     </footer>
 
     <script>
-        document.getElementById('analysisForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-
-            const url = document.getElementById('websiteUrl').value;
-            const loadingIndicator = document.getElementById('loadingIndicator');
-            const results = document.getElementById('analysisResults');
-
-            // Показываем индикатор загрузки
-            loadingIndicator.style.display = 'block';
-            results.style.display = 'none';
-
-            // Имитация анализа (в реальном приложении здесь был бы запрос к API)
-            setTimeout(function() {
-                // Скрываем индикатор загрузки
-                loadingIndicator.style.display = 'none';
-
-                // Заполняем результаты анализа
-                document.getElementById('generalInfo').innerHTML = `
-                    <p>Анализируемый сайт: <strong>${url}</strong></p>
-                    <p>Статус SSL: <span style="color: green;">Действительный сертификат</span></p>
-                    <p>Заголовки безопасности: <span style="color: orange;">Частично настроены</span></p>
-                    <p>Версия HTTP: HTTP/2</p>
-                `;
-
-                document.getElementById('vulnerabilities').innerHTML = `
-                    <ul>
-                        <li>Отсутствует заголовок Content-Security-Policy</li>
-                        <li>Форма обратной связи не проверяет ввод пользователя</li>
-                        <li>Версия WordPress устарела</li>
-                    </ul>
-                `;
-
-                document.getElementById('recommendations').innerHTML = `
-                    <ul>
-                        <li>Настройте заголовок Content-Security-Policy для предотвращения XSS-атак</li>
-                        <li>Реализуйте проверку ввода для всех форм на сайте</li>
-                        <li>Обновите WordPress до последней версии</li>
-                        <li>Установите WAF (Web Application Firewall) для дополнительной защиты</li>
-                        <li>Регулярно создавайте резервные копии сайта</li>
-                    </ul>
-                `;
-
-                // Показываем результаты
-                results.style.display = 'block';
-            }, 3000);
-        });
-
         document.getElementById('dnsForm').addEventListener('submit', function(e) {
             e.preventDefault();
 
@@ -409,3 +363,4 @@
     </script>
 </body>
 </html>
+
