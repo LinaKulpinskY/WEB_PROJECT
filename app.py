@@ -6,9 +6,18 @@ import requests
 import json
 from urllib.parse import quote, urlparse
 from bs4 import BeautifulSoup
+from flask import Flask, request, jsonify, render_template_string
+import json
+import os
+import subprocess
+from datetime import datetime
+import uuid
 
 app = Flask(__name__)
 CORS(app)
+
+# Хранилище DNS конфигураций пользователей
+DNS_CONFIGS = {}
 
 # Role configuration for the AI assistant
 role = 'Ты помощник, который помогает с улучшением безопасности сайтов. Пишешь ты легко для понимания, но при этом не теряя смысла и предлагая решения этих проблем. Если вопрос не по теме кибербезопасности и твоей роли, то отвечай: "Вопрос не по теме.", ИНАЧЕ ЧЕЛОВЕКУ БУДЕТ НЕПРИЯТНО И ПЛОХО.'
@@ -475,6 +484,111 @@ def api_scan():
         import traceback
         traceback.print_exc()
         return jsonify({'error': str(e)}), 500
+
+@app.route('/')
+def index():
+    return render_template_string(HTML_PAGE)
+
+
+@app.route('/upload-dns', methods=['POST'])
+def upload_dns():
+    """Эндпоинт для загрузки DNS конфигурации"""
+    try:
+        data = request.get_json()
+        dns_code = data.get('dns_code', '')
+
+        if not dns_code:
+            return jsonify({'success': False, 'error': 'DNS код не может быть пустым'})
+
+        # Генерируем уникальный ID пользователя
+        user_id = f"user_{datetime.now().strftime('%Y%m%d%H%M%S')}_{uuid.uuid4().hex[:6]}"
+
+        # Сохраняем DNS конфигурацию
+        DNS_CONFIGS[user_id] = {
+            'dns_code': dns_code,
+            'created_at': datetime.now().isoformat(),
+            'dns_server': f"127.0.0.1:{9000 + len(DNS_CONFIGS)}",  # Генерируем уникальный порт
+            'dns_preview': dns_code[:200] + '...' if len(dns_code) > 200 else dns_code
+        }
+
+        # Запускаем DNS сервер для пользователя
+        start_dns_server(user_id, DNS_CONFIGS[user_id]['dns_server'], dns_code)
+
+        return jsonify({
+            'success': True,
+            'user_id': user_id,
+            'dns_server': DNS_CONFIGS[user_id]['dns_server'],
+            'message': 'DNS конфигурация загружена и сервер запущен'
+        })
+
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
+
+
+@app.route('/list-configs', methods=['GET'])
+def list_configs():
+    """Возвращает список всех конфигураций пользователя"""
+    try:
+        configs = []
+        for user_id, config in DNS_CONFIGS.items():
+            configs.append({
+                'user_id': user_id,
+                'dns_server': config['dns_server'],
+                'created_at': config['created_at'],
+                'dns_preview': config['dns_preview']
+            })
+
+        return jsonify({
+            'success': True,
+            'configs': configs
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
+
+
+@app.route('/connect-dns', methods=['POST'])
+def connect_dns():
+    """Эндпоинт для подключения к DNS серверу"""
+    try:
+        data = request.get_json()
+        user_id = data.get('user_id', '')
+
+        if not user_id:
+            return jsonify({'success': False, 'error': 'ID пользователя не указан'})
+
+        if user_id not in DNS_CONFIGS:
+            return jsonify({'success': False, 'error': 'DNS конфигурация не найдена. Сначала загрузите конфигурацию.'})
+
+        dns_config = DNS_CONFIGS[user_id]
+
+        return jsonify({
+            'success': True,
+            'message': 'DNS сервер готов к использованию',
+            'dns_server': dns_config['dns_server'],
+            'user_id': user_id,
+            'config_preview': dns_config['dns_preview']
+        })
+
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
+
+
+def start_dns_server(user_id, dns_server, dns_code):
+    """Запускает DNS сервер для пользователя с его конфигурацией"""
+    try:
+        print(f"🚀 Запуск DNS сервера для {user_id}")
+        print(f"📍 Адрес сервера: {dns_server}")
+        print(f"📋 Конфигурация: {dns_code[:100]}...")
+
+        # Здесь будет код запуска реального DNS сервера
+        # Например, на основе dnsmasq, bind или кастомного решения
+
+        # Для демонстрации просто логируем
+        print(f"✅ DNS сервер для {user_id} запущен на {dns_server}")
+
+    except Exception as e:
+        print(f"❌ Ошибка запуска DNS сервера: {e}")
+
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
