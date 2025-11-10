@@ -590,6 +590,181 @@ nmcli con down "ваше-подключение"; nmcli con up "ваше-под�
             }
         }
     </script>
+        <script>
+    let currentUserId = '';
+
+    // Функция для загрузки DNS конфигурации
+    async function uploadDNS() {
+        const dnsCode = document.getElementById('dnsCode').value;
+        const statusDiv = document.getElementById('status');
+
+        if (!dnsCode.trim()) {
+            statusDiv.innerHTML = '<div style="color: red;">❌ Введите DNS конфигурацию</div>';
+            return;
+        }
+
+        try {
+            const response = await fetch('/upload-dns', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ dns_code: dnsCode })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                currentUserId = result.user_id;
+                statusDiv.innerHTML = `
+                    <div style="background: #d4edda; color: #155724; padding: 15px; border-radius: 5px;">
+                        <h3>✅ Конфигурация успешно загружена!</h3>
+                        <p><strong>Ваш уникальный ID:</strong></p>
+                        <div style="background: #fff3cd; padding: 10px; border-radius: 4px; font-family: monospace;">
+                            ${result.user_id}
+                        </div>
+                        <p><strong>DNS сервер:</strong> ${result.dns_server}</p>
+                        <p><em>Сохраните этот ID для подключения к DNS серверу!</em></p>
+                    </div>
+                `;
+            } else {
+                statusDiv.innerHTML = `
+                    <div style="background: #f8d7da; color: #721c24; padding: 15px; border-radius: 5px;">
+                        <strong>❌ Ошибка:</strong> ${result.error}
+                    </div>
+                `;
+            }
+        } catch (error) {
+            statusDiv.innerHTML = `
+                <div style="background: #f8d7da; color: #721c24; padding: 15px; border-radius: 5px;">
+                    <strong>❌ Ошибка сети:</strong> ${error.message}
+                </div>
+            `;
+        }
+    }
+
+    // Функция для подключения к DNS серверу
+    async function connectToDNS() {
+        const userId = document.getElementById('userId').value || currentUserId;
+        const statusDiv = document.getElementById('connectionStatus');
+
+        if (!userId) {
+            alert('Пожалуйста, введите ID пользователя или сначала загрузите конфигурацию');
+            return;
+        }
+
+        try {
+            const response = await fetch('/connect-dns', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ user_id: userId })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                statusDiv.innerHTML = `
+                    <div style="background: #d4edda; color: #155724; padding: 15px; border-radius: 5px;">
+                        <h3>✅ Успешно подключено!</h3>
+                        <p><strong>DNS сервер:</strong> ${result.dns_server}</p>
+                        <p>${result.message}</p>
+
+                        <h4>📋 Инструкции по настройке:</h4>
+                        <div style="background: white; padding: 15px; border-radius: 5px; margin-top: 10px;">
+                            <p><strong>Для Windows:</strong></p>
+                            <ol>
+                                <li>Откройте "Панель управления" → "Сеть и Интернет"</li>
+                                <li>Нажмите "Центр управления сетями и общим доступом"</li>
+                                <li>Выберите "Изменение параметров адаптера"</li>
+                                <li>Правой кнопкой на вашем подключении → "Свойства"</li>
+                                <li>Выберите "IP версии 4 (TCP/IPv4)" → "Свойства"</li>
+                                <li>Введите DNS: <code>${result.dns_server.split(':')[0]}</code></li>
+                            </ol>
+
+                            <p><strong>Для тестирования:</strong></p>
+                            <button onclick="testDNS('${userId}')" style="background: #007cba; color: white; padding: 8px 15px; border: none; border-radius: 4px; cursor: pointer;">
+                                🧪 Протестировать DNS
+                            </button>
+                        </div>
+                    </div>
+                `;
+            } else {
+                statusDiv.innerHTML = `
+                    <div style="background: #f8d7da; color: #721c24; padding: 15px; border-radius: 5px;">
+                        <strong>❌ Ошибка:</strong> ${result.error}
+                    </div>
+                `;
+            }
+        } catch (error) {
+            statusDiv.innerHTML = `
+                <div style="background: #f8d7da; color: #721c24; padding: 15px; border-radius: 5px;">
+                    <strong>❌ Ошибка сети:</strong> ${error.message}
+                </div>
+            `;
+        }
+    }
+
+    // Функция для тестирования DNS
+    async function testDNS(userId) {
+        try {
+            const response = await fetch('/test-dns', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    user_id: userId,
+                    domain: 'google.com'
+                })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                alert(`✅ DNS работает!\nДомен: ${result.domain}\nIP: ${result.ip}\nВремя: ${result.response_time}ms`);
+            } else {
+                alert(`❌ Ошибка DNS: ${result.error}`);
+            }
+        } catch (error) {
+            alert(`❌ Ошибка тестирования: ${error.message}`);
+        }
+    }
+
+    // Функция для поиска ID
+    async function findMyID() {
+        try {
+            const response = await fetch('/list-configs');
+            const result = await response.json();
+
+            if (result.success && result.configs.length > 0) {
+                let html = '<div style="background: #d1ecf1; color: #0c5460; padding: 15px; border-radius: 5px;">';
+                html += '<h3>📋 Ваши загруженные конфигурации:</h3>';
+
+                result.configs.forEach(config => {
+                    html += `
+                    <div style="margin: 10px 0; padding: 10px; background: white; border-radius: 4px;">
+                        <strong>ID:</strong> <code>${config.user_id}</code><br>
+                        <strong>Сервер:</strong> ${config.dns_server}<br>
+                        <strong>Создано:</strong> ${new Date(config.created_at).toLocaleString()}<br>
+                        <strong>Конфигурация:</strong><br>
+                        <pre style="background: #f8f9fa; padding: 5px; border-radius: 3px; font-size: 12px;">${config.dns_preview}</pre>
+                    </div>`;
+                });
+
+                html += '</div>';
+                document.getElementById('findIdResults').innerHTML = html;
+            } else {
+                document.getElementById('findIdResults').innerHTML = `
+                    <div style="background: #f8d7da; color: #721c24; padding: 15px; border-radius: 5px;">
+                        ❌ У вас нет загруженных конфигураций. Сначала загрузите DNS конфигурацию.
+                    </div>
+                `;
+            }
+        } catch (error) {
+            document.getElementById('findIdResults').innerHTML = `
+                <div style="background: #f8d7da; color: #721c24; padding: 15px; border-radius: 5px;">
+                    ❌ Ошибка загрузки: ${error.message}
+                </div>
+            `;
+        }
+    }
+</script>
     <footer>
         <div class="container">
             <p>&copy; 2023 Анализатор безопасности веб-сайтов. Все права защищены.</p>
