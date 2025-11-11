@@ -740,5 +740,6 @@ def start_dns_server(user_id, dns_server, dns_code):
         print(f"❌ Ошибка запуска DNS сервера: {e}")
 
 
+
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
