@@ -698,7 +698,6 @@ def list_configs():
 
 @app.route('/connect-dns', methods=['POST'])
 def connect_dns():
-    """Эндпоинт для подключения к DNS серверу"""
     try:
         data = request.get_json()
         user_id = data.get('user_id', '')
@@ -731,9 +730,6 @@ def start_dns_server(user_id, dns_server, dns_code):
         print(f"📋 Конфигурация: {dns_code[:100]}...")
 
         # Здесь будет код запуска реального DNS сервера
-        # Например, на основе dnsmasq, bind или кастомного решения
-
-        # Для демонстрации просто логируем
         print(f"✅ DNS сервер для {user_id} запущен на {dns_server}")
 
     except Exception as e:
