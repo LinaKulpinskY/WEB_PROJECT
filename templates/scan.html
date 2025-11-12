@@ -393,23 +393,7 @@
                 </div>
                 {% endif %}
 
-                <!-- Website Info -->
-                {% if results.website_info %}
-                <div class="result-item">
-                    <div class="result-title">Информация о сайте</div>
-                    <div class="result-content">
-                        {% if results.website_info.IP %}
-                        <p><strong>IP адрес:</strong> {{ results.website_info.IP }}</p>
-                        {% endif %}
-                        {% if results.website_info.SERVER %}
-                        <p><strong>Сервер:</strong> {{ results.website_info.SERVER }}</p>
-                        {% endif %}
-                        {% if results.website_info.CMS %}
-                        <p><strong>CMS:</strong> {{ results.website_info.CMS }}</p>
-                        {% endif %}
-                    </div>
-                </div>
-                {% endif %}
+
 
                 <!-- Recommendations -->
                 {% if results.recommendations %}
