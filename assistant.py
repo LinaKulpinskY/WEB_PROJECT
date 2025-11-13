@@ -34,5 +34,3 @@ async def send_request_gpt(content: str):
 
 if __name__ == "__main__":
     result = asyncio.run(send_request_gpt(input()))
-    print(result)
-    print(BOT_HISTORY)

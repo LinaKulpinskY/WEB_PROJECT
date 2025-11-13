@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Анализатор безопасности веб-сайтов</title>
+    <title>Threat Horizon</title>
     <style>
         :root {
             --primary-color: #2c3e50;
@@ -246,129 +246,108 @@
     </style>
 </head>
 <body>
-    <header>
-        <div class="container">
-            <a href="/chat" class="nav-link">Чат с AI</a>
-            <h1>Анализатор безопасности веб-сайтов</h1>
-            <p class="authors">Авторы: Кульпинская Елена, Кононов Александр, Челноков Егор 10"Б"</p>
-            <p>ГБОУ г. Москвы «Школа № 1501»</p>
-        </div>
-    </header>
-
+<header>
     <div class="container">
-        <section class="section">
-            <h2>О проекте</h2>
-            <h3>Актуальность</h3>
-            <p>В современном мире, с ростом количества различных приложений, кибербезопасность становится критически важной для каждого пользователя и организаций. Количество веб-угроз постоянно растет: от распределенных атак на отказ в обслуживании (DDoS), до уязвимостей в коде сайтов, ведущих к утечке данных.</p>
-            <p>Многие владельцы небольших сайтов и начинающие разработчики не обладают достаточными знаниями и ресурсами для комплексной проверки и защиты своих ресурсов. Существуют профессиональные инструменты для проверки веб-приложений, но не все легко понять. При этом не существует универсального и доступного решения, которое объединяло бы в себе автоматизированный анализ, интеллектуальные рекомендации по защите и методы самостоятельной проверки.</p>
-            <p>Решение этой проблемы принесет практическую пользу, позволив пользователям быстро и без глубоких технических знаний оценить базовые риски безопасности веб-приложения.</p>
+        <a href="/chat" class="nav-link">Чат с AI</a>
+        <h1>Threat Horizon</h1>
+        <p class="authors">Анализатор безопасности веб-сайтов</p>
+    </div>
+</header>
 
-            <h3>Проблема</h3>
-            <p>Отсутствие доступного и многофункционального программного обеспечения, позволяющего неподготовленным пользователям проводить комплексный первичный анализ безопасности веб-ресурсов и получать персонализированные рекомендации по их защите.</p>
+<div class="container">
+    <section class="section">
+        <h2>Анализ безопасности веб-сайта</h2>
+        <p>Введите URL веб-сайта для анализа его безопасности:</p>
 
-            <h3>Цель работы</h3>
-            <p>Разработать десктопное приложение на Python, предоставляющее комплекс инструментов для анализа безопасности веб-сайтов и выработки рекомендаций по их защите.</p>
+        <form class="analysis-form" id="analysisForm" action="/scan" method="POST">
+            <div class="input-group">
+                <input type="url" id="websiteUrl" name="url" placeholder="https://example.com" required>
+                <button type="submit">Проанализировать</button>
+            </div>
+        </form>
 
-            <h3>Задачи</h3>
-            <ol class="task-list">
-                <li>Изучить принципы веб-скрапинга и парсинга для сбора данных о целевом веб-ресурсе.</li>
-                <li>Реализовать модуль анализа веб-сайта, который по предоставленной ссылке собирает ключевую информацию и формирует отчет.</li>
-                <li>Интегрировать в приложение доступное API нейросетевой модели для генерации рекомендаций по методам защиты на основе данных анализа.</li>
-                <li>Разработать модуль с методами самостоятельной проверки пользователем основных параметров безопасности.</li>
-                <li>Реализовать функционал для подключения DNS-серверов для одного из методов повышения устойчивости и конфиденциальности.</li>
-                <li>Провести тестирование работоспособности всех модулей приложения на примере тестовых веб-сайтов.</li>
-                <li>Разработать интуитивно понятный графический интерфейс для удобного взаимодействия пользователя с функционалом приложения.</li>
-            </ol>
-        </section>
+        <div class="loading" id="loadingIndicator">
+            <div class="spinner"></div>
+            <p>Анализ выполняется, пожалуйста подождите...</p>
+        </div>
 
-        <section class="section">
-            <h2>Анализ безопасности веб-сайта</h2>
-            <p>Введите URL веб-сайта для анализа его безопасности:</p>
+        <div class="results" id="analysisResults">
+            <h3>Результаты анализа</h3>
 
-            <form class="analysis-form" id="analysisForm" action="/scan" method="POST">
-                <div class="input-group">
-                    <input type="url" id="websiteUrl" name="url" placeholder="https://example.com" required>
-                    <button type="submit">Проанализировать</button>
-                </div>
-            </form>
-
-            <div class="loading" id="loadingIndicator">
-                <div class="spinner"></div>
-                <p>Анализ выполняется, пожалуйста подождите...</p>
+            <div class="result-item">
+                <div class="result-title">Общая информация</div>
+                <div id="generalInfo">Загрузка...</div>
             </div>
 
-            <div class="results" id="analysisResults">
-                <h3>Результаты анализа</h3>
-
-                <div class="result-item">
-                    <div class="result-title">Общая информация</div>
-                    <div id="generalInfo">Загрузка...</div>
-                </div>
-
-                <div class="result-item">
-                    <div class="result-title">Обнаруженные уязвимости</div>
-                    <div id="vulnerabilities">Загрузка...</div>
-                </div>
-
-                <div class="result-item">
-                    <div class="result-title">Рекомендации по защите</div>
-                    <div class="recommendations" id="recommendations">Загрузка...</div>
-                </div>
+            <div class="result-item">
+                <div class="result-title">Обнаруженные уязвимости</div>
+                <div id="vulnerabilities">Загрузка...</div>
             </div>
-        </section>
 
-        <section class="section">
-            <h2>Методы самостоятельной проверки</h2>
-            <p>Здесь вы можете проверить основные параметры безопасности вашего веб-сайта:</p>
-
-            <div class="manual-checks">
-                <h3>Проверка SSL-сертификата</h3>
-                <p>Убедитесь, что ваш сайт использует действительный SSL-сертификат для шифрования данных.</p>
-
-                <h3>Проверка заголовков безопасности</h3>
-                <p>Убедитесь, что ваш сайт использует правильные заголовки безопасности, такие как Content Security Policy, X-Content-Type-Options и др.</p>
-
-                <h3>Проверка на наличие уязвимостей ввода</h3>
-                <p>Убедитесь, что все формы на вашем сайте проверяют и фильтруют пользовательский ввод для предотвращения XSS и SQL-инъекций.</p>
+            <div class="result-item">
+                <div class="result-title">Рекомендации по защите</div>
+                <div class="recommendations" id="recommendations">Загрузка...</div>
             </div>
-        </section>
+        </div>
+    </section>
 
-        <section class="section dns-section">
-            <h2>Настройка DNS-серверов</h2>
-            <p>Использование безопасных DNS-серверов может повысить конфиденциальность и устойчивость вашего интернет-соединения.</p>
+    <section class="section">
+        <h2>Методы самостоятельной проверки</h2>
+        <p>Здесь вы можете проверить основные параметры безопасности вашего веб-сайта:</p>
 
-            <form class="dns-form" id="dnsForm">
-                <div class="input-group">
-                    <input type="text" id="dnsServer" placeholder="Введите DNS-сервер (например, 1.1.1.1)" required>
-                    <button type="submit">Добавить DNS-сервер</button>
-                </div>
-            </form>
+        <div class="manual-checks">
+            <h3>Проверка SSL-сертификата</h3>
+            <p>Убедитесь, что ваш сайт использует действительный SSL-сертификат для шифрования данных.</p>
 
-            <h3>Рекомендуемые DNS-серверы</h3>
-            <div class="dns-servers" id="dnsServersList">
-                <div class="dns-server">
-                    <strong>Cloudflare</strong><br>
-                    1.1.1.1<br>
-                    1.0.0.1
-                </div>
-                <div class="dns-server">
-                    <strong>Google</strong><br>
-                    8.8.8.8<br>
-                    8.8.4.4
-                </div>
-                <div class="dns-server">
-                    <strong>Quad9</strong><br>
-                    9.9.9.9<br>
-                    149.112.112.112
-                </div>
+            <h3>Проверка заголовков безопасности</h3>
+            <p>Убедитесь, что ваш сайт использует правильные заголовки безопасности, такие как Content Security Policy,
+                X-Content-Type-Options и др.</p>
+
+            <h3>Проверка на наличие уязвимостей ввода</h3>
+            <p>Убедитесь, что все формы на вашем сайте проверяют и фильтруют пользовательский ввод для предотвращения
+                XSS и SQL-инъекций.</p>
+        </div>
+    </section>
+
+    <section class="section dns-section">
+        <h2>Настройка DNS-серверов</h2>
+        <p>Использование безопасных DNS-серверов может повысить конфиденциальность и устойчивость вашего
+            интернет-соединения.</p>
+
+        <form class="dns-form" id="dnsForm">
+            <div class="input-group">
+                <input type="text" id="dnsServer" placeholder="Введите DNS-сервер (например, 1.1.1.1)" required>
+                <button type="submit">Добавить DNS-сервер</button>
             </div>
-        </section>
+        </form>
 
-        <section class="section">
-            <h2>Загрузите DNS конфигурацию</h2>
-            <p><em>DNS конфигурация - это файл с настройками того, КАК должен работать DNS сервер</em></p>
+        <h3>Рекомендуемые DNS-серверы</h3>
+        <div class="dns-servers" id="dnsServersList">
+            <div class="dns-server">
+                <strong>Cloudflare</strong><br>
+                1.1.1.1<br>
+                1.0.0.1
+            </div>
+            <div class="dns-server">
+                <strong>Google</strong><br>
+                8.8.8.8<br>
+                8.8.4.4
+            </div>
+            <div class="dns-server">
+                <strong>Quad9</strong><br>
+                9.9.9.9<br>
+                149.112.112.112
+            </div>
+        </div>
+    </section>
+<section class="section" style="text-align: center;">
+    <h2 style="text-align: left;">Загрузите DNS конфигурацию</h2>
+    <p style="text-align: center; max-width: 600px; margin: 0 auto 20px auto;">
+        <em>DNS конфигурация - это файл с настройками того, КАК должен работать DNS сервер</em>
+    </p>
 
-            <textarea id="dnsCode" placeholder="Пример DNS конфигурации:
+    <div style="display: flex; flex-direction: column; align-items: center; gap: 15px;">
+        <textarea id="dnsCode" placeholder="Пример DNS конфигурации:
 address /ads.example.com/0.0.0.0
 address /tracking.example.com/0.0.0.0
 
@@ -376,207 +355,211 @@ address /mywebsite.local/192.168.1.100
 address /api.local/192.168.1.101
 
 nameserver 8.8.8.8
-nameserver 1.1.1.1"></textarea>
-            <br>
-            <button onclick="uploadDNS()">Загрузить DNS конфигурацию</button>
-            <div id="status"></div>
-        </section>
+nameserver 1.1.1.1"
+        style="width: 100%; max-width: 500px; min-height: 200px; text-align: center; font-family: 'Courier New', monospace; padding: 15px;"></textarea>
 
-        <section class="section">
-            <h2>Подключиться к DNS серверу</h2>
-            <p><em>DNS сервер - это ПРОГРАММА, которая работает на основе вашей конфигурации и обрабатывает запросы</em></p>
-
-            <input type="text" id="userId" placeholder="Введите ваш ID пользователя">
-            <button onclick="connectToDNS()">Подключиться к DNS</button>
-            <div id="connectionStatus"></div>
-        </section>
-
-        <section class="section">
-            <h2>В чем разница?</h2>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-                <div style="background: #e7f3ff; padding: 15px; border-radius: 5px;">
-                    <h3>DNS Конфигурация</h3>
-                    <ul>
-                        <li><strong>Файл с настройками</strong></li>
-                        <li>Определяет ПРАВИЛА работы</li>
-                        <li>Что блокировать</li>
-                        <li>Куда перенаправлять</li>
-                        <li>Какие DNS использовать</li>
-                    </ul>
-                </div>
-                <div style="background: #fff2e7; padding: 15px; border-radius: 5px;">
-                    <h3>DNS Сервер</h3>
-                    <ul>
-                        <li><strong>Работающая программа</strong></li>
-                        <li>Обрабатывает запросы</li>
-                        <li>Возвращает IP адреса</li>
-                        <li>Работает на сервере</li>
-                        <li>Принимает подключения</li>
-                    </ul>
-                </div>
-            </div>
-        </section>
+        <button onclick="uploadDNS()">Загрузить DNS конфигурацию</button>
+        <div id="status" style="text-align: center;"></div>
     </div>
+</section>
 
-    <footer>
-        <div class="container">
-            <p>&copy; 2023 Анализатор безопасности веб-сайтов. Все права защищены.</p>
-            <p>ГБОУ г. Москвы «Школа № 1501»</p>
+    <section class="section" style="text-align: center;">
+    <h2 style="text-align: left;">Подключиться к DNS серверу</h2>
+    <p style="text-align: center; max-width: 600px; margin: 0 auto 20px auto;"><em>DNS сервер - это ПРОГРАММА, которая работает на основе вашей конфигурации и обрабатывает запросы</em></p>
+
+    <div style="display: flex; flex-direction: column; align-items: center; gap: 15px;">
+        <input type="text" id="userId" placeholder="Введите ваш ID пользователя" style="text-align: center;">
+        <button onclick="connectToDNS()">Подключиться к DNS</button>
+        <div id="connectionStatus"></div>
+    </div>
+</section>
+
+<section class="section" style="text-align: center;">
+    <h2 style="text-align: left;">В чем разница?</h2>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; max-width: 800px; margin: 0 auto;">
+        <div style="background: #e7f3ff; padding: 15px; border-radius: 5px; text-align: center;">
+            <h3>DNS Конфигурация</h3>
+            <ul style="padding: 0; margin: 0; display: inline-block; text-align: left;">
+                <li><strong>Файл с настройками</strong></li>
+                <li>Определяет ПРАВИЛА работы</li>
+                <li>Что блокировать</li>
+                <li>Куда перенаправлять</li>
+                <li>Какие DNS использовать</li>
+            </ul>
         </div>
-    </footer>
+        <div style="background: #fff2e7; padding: 15px; border-radius: 5px; text-align: center;">
+            <h3>DNS Сервер</h3>
+            <ul style="padding: 0; margin: 0; display: inline-block; text-align: left;">
+                <li><strong>Работающая программа</strong></li>
+                <li>Обрабатывает запросы</li>
+                <li>Возвращает IP адреса</li>
+                <li>Работает на сервере</li>
+                <li>Принимает подключения</li>
+            </ul>
+        </div>
+    </div>
+</section>
+</div>
 
-    <script>
-        let currentUserId = '';
+<footer>
+    <div class="container">
+        <p>&copy; 2023 Анализатор безопасности веб-сайтов. Все права защищены.</p>
+        <p>ГБОУ г. Москвы «Школа № 1501»</p>
+    </div>
+</footer>
 
-        // Функция для загрузки DNS конфигурации
-        async function uploadDNS() {
-            const dnsCode = document.getElementById('dnsCode').value;
-            const statusDiv = document.getElementById('status');
+<script>
+    let currentUserId = '';
 
-            if (!dnsCode.trim()) {
-                statusDiv.innerHTML = '<div style="color: red;">❌ Введите DNS конфигурацию</div>';
-                return;
-            }
+    // Функция для загрузки DNS конфигурации
+    async function uploadDNS() {
+        const dnsCode = document.getElementById('dnsCode').value;
+        const statusDiv = document.getElementById('status');
 
-            try {
-                const response = await fetch('/upload-dns', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ dns_code: dnsCode })
-                });
+        if (!dnsCode.trim()) {
+            statusDiv.innerHTML = '<div style="color: red;">❌ Введите DNS конфигурацию</div>';
+            return;
+        }
 
-                const result = await response.json();
+        try {
+            const response = await fetch('/upload-dns', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ dns_code: dnsCode })
+            });
 
-                if (result.success) {
-                    currentUserId = result.user_id;
-                    statusDiv.innerHTML = `
-                        <div style="background: #d4edda; color: #155724; padding: 15px; border-radius: 5px;">
-                            <h3>✅ Конфигурация успешно загружена!</h3>
-                            <p><strong>Ваш уникальный ID:</strong></p>
-                            <div style="background: #fff3cd; padding: 10px; border-radius: 4px; font-family: monospace;">
-                                ${result.user_id}
-                            </div>
-                            <p><strong>DNS сервер:</strong> ${result.dns_server}</p>
-                            <p><em>Сохраните этот ID для подключения к DNS серверу!</em></p>
+            const result = await response.json();
+
+            if (result.success) {
+                currentUserId = result.user_id;
+                statusDiv.innerHTML = `
+                    <div style="background: #d4edda; color: #155724; padding: 15px; border-radius: 5px;">
+                        <h3>✅ Конфигурация успешно загружена!</h3>
+                        <p><strong>Ваш уникальный ID:</strong></p>
+                        <div style="background: #fff3cd; padding: 10px; border-radius: 4px; font-family: monospace;">
+                            ${result.user_id}
                         </div>
-                    `;
-                } else {
-                    statusDiv.innerHTML = `
-                        <div style="background: #f8d7da; color: #721c24; padding: 15px; border-radius: 5px;">
-                            <strong>❌ Ошибка:</strong> ${result.error}
-                        </div>
-                    `;
-                }
-            } catch (error) {
+                        <p><strong>DNS сервер:</strong> ${result.dns_server}</p>
+                        <p><em>Сохраните этот ID для подключения к DNS серверу!</em></p>
+                    </div>
+                `;
+            } else {
                 statusDiv.innerHTML = `
                     <div style="background: #f8d7da; color: #721c24; padding: 15px; border-radius: 5px;">
-                        <strong>❌ Ошибка сети:</strong> ${error.message}
+                        <strong>❌ Ошибка:</strong> ${result.error}
                     </div>
                 `;
             }
+        } catch (error) {
+            statusDiv.innerHTML = `
+                <div style="background: #f8d7da; color: #721c24; padding: 15px; border-radius: 5px;">
+                    <strong>❌ Ошибка сети:</strong> ${error.message}
+                </div>
+            `;
+        }
+    }
+
+    // Функция для подключения к DNS серверу
+    async function connectToDNS() {
+        const userId = document.getElementById('userId').value || currentUserId;
+        const statusDiv = document.getElementById('connectionStatus');
+
+        if (!userId) {
+            alert('Пожалуйста, введите ID пользователя или сначала загрузите конфигурацию');
+            return;
         }
 
-        // Функция для подключения к DNS серверу
-        async function connectToDNS() {
-            const userId = document.getElementById('userId').value || currentUserId;
-            const statusDiv = document.getElementById('connectionStatus');
+        try {
+            const response = await fetch('/connect-dns', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ user_id: userId })
+            });
 
-            if (!userId) {
-                alert('Пожалуйста, введите ID пользователя или сначала загрузите конфигурацию');
-                return;
-            }
+            const result = await response.json();
 
-            try {
-                const response = await fetch('/connect-dns', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ user_id: userId })
-                });
+            if (result.success) {
+                statusDiv.innerHTML = `
+                    <div style="background: #d4edda; color: #155724; padding: 15px; border-radius: 5px;">
+                        <h3>✅ Успешно подключено!</h3>
+                        <p><strong>DNS сервер:</strong> ${result.dns_server}</p>
+                        <p>${result.message}</p>
 
-                const result = await response.json();
+                        <h4>📋 Инструкции по настройке:</h4>
+                        <div style="background: white; padding: 15px; border-radius: 5px; margin-top: 10px;">
+                            <p><strong>Для Windows:</strong></p>
+                            <ol>
+                                <li>Откройте "Панель управления" → "Сеть и Интернет"</li>
+                                <li>Нажмите "Центр управления сетями и общим доступом"</li>
+                                <li>Выберите "Изменение параметров адаптера"</li>
+                                <li>Правой кнопкой на вашем подключении → "Свойства"</li>
+                                <li>Выберите "IP версии 4 (TCP/IPv4)" → "Свойства"</li>
+                                <li>Введите DNS: <code>${result.dns_server.split(':')[0]}</code></li>
+                            </ol>
 
-                if (result.success) {
-                    statusDiv.innerHTML = `
-                        <div style="background: #d4edda; color: #155724; padding: 15px; border-radius: 5px;">
-                            <h3>✅ Успешно подключено!</h3>
-                            <p><strong>DNS сервер:</strong> ${result.dns_server}</p>
-                            <p>${result.message}</p>
-
-                            <h4>📋 Инструкции по настройке:</h4>
-                            <div style="background: white; padding: 15px; border-radius: 5px; margin-top: 10px;">
-                                <p><strong>Для Windows:</strong></p>
-                                <ol>
-                                    <li>Откройте "Панель управления" → "Сеть и Интернет"</li>
-                                    <li>Нажмите "Центр управления сетями и общим доступом"</li>
-                                    <li>Выберите "Изменение параметров адаптера"</li>
-                                    <li>Правой кнопкой на вашем подключении → "Свойства"</li>
-                                    <li>Выберите "IP версии 4 (TCP/IPv4)" → "Свойства"</li>
-                                    <li>Введите DNS: <code>${result.dns_server.split(':')[0]}</code></li>
-                                </ol>
-
-                            </div>
                         </div>
-                    `;
-                } else {
-                    statusDiv.innerHTML = `
-                        <div style="background: #f8d7da; color: #721c24; padding: 15px; border-radius: 5px;">
-                            <strong>❌ Ошибка:</strong> ${result.error}
-                        </div>
-                    `;
-                }
-            } catch (error) {
+                    </div>
+                `;
+            } else {
                 statusDiv.innerHTML = `
                     <div style="background: #f8d7da; color: #721c24; padding: 15px; border-radius: 5px;">
-                        <strong>❌ Ошибка сети:</strong> ${error.message}
+                        <strong>❌ Ошибка:</strong> ${result.error}
                     </div>
                 `;
             }
+        } catch (error) {
+            statusDiv.innerHTML = `
+                <div style="background: #f8d7da; color: #721c24; padding: 15px; border-radius: 5px;">
+                    <strong>❌ Ошибка сети:</strong> ${error.message}
+                </div>
+            `;
         }
+    }
 
-        // Функция для тестирования DNS
-        async function testDNS(userId) {
-            try {
-                const response = await fetch('/test-dns', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        user_id: userId,
-                        domain: 'google.com'
-                    })
-                });
+    // Функция для тестирования DNS
+    async function testDNS(userId) {
+        try {
+            const response = await fetch('/test-dns', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    user_id: userId,
+                    domain: 'google.com'
+                })
+            });
 
-                const result = await response.json();
+            const result = await response.json();
 
-                if (result.success) {
-                    alert(`✅ DNS работает!\nДомен: ${result.domain}\nIP: ${result.ip}\nВремя: ${result.response_time}ms`);
-                } else {
-                    alert(`❌ Ошибка DNS: ${result.error}`);
-                }
-            } catch (error) {
-                alert(`❌ Ошибка тестирования: ${error.message}`);
+            if (result.success) {
+                alert(`✅ DNS работает!\nДомен: ${result.domain}\nIP: ${result.ip}\nВремя: ${result.response_time}ms`);
+            } else {
+                alert(`❌ Ошибка DNS: ${result.error}`);
             }
+        } catch (error) {
+            alert(`❌ Ошибка тестирования: ${error.message}`);
         }
+    }
 
-        // Обработчик формы DNS серверов
-        document.getElementById('dnsForm').addEventListener('submit', function(e) {
-            e.preventDefault();
+    // Обработчик формы DNS серверов
+    document.getElementById('dnsForm').addEventListener('submit', function(e) {
+        e.preventDefault();
 
-            const dnsServer = document.getElementById('dnsServer').value;
-            const dnsServersList = document.getElementById('dnsServersList');
+        const dnsServer = document.getElementById('dnsServer').value;
+        const dnsServersList = document.getElementById('dnsServersList');
 
-            // Создаем новый элемент DNS-сервера
-            const newDnsServer = document.createElement('div');
-            newDnsServer.className = 'dns-server';
-            newDnsServer.innerHTML = `<strong>Пользовательский</strong><br>${dnsServer}`;
+        // Создаем новый элемент DNS-сервера
+        const newDnsServer = document.createElement('div');
+        newDnsServer.className = 'dns-server';
+        newDnsServer.innerHTML = `<strong>Пользовательский</strong><br>${dnsServer}`;
 
-            // Добавляем новый DNS-сервер в список
-            dnsServersList.appendChild(newDnsServer);
+        // Добавляем новый DNS-сервер в список
+        dnsServersList.appendChild(newDnsServer);
 
-            // Очищаем поле ввода
-            document.getElementById('dnsServer').value = '';
+        // Очищаем поле ввода
+        document.getElementById('dnsServer').value = '';
 
-            alert(`DNS-сервер ${dnsServer} добавлен в список рекомендаций!`);
-        });
-    </script>
+        alert(`DNS-сервер ${dnsServer} добавлен в список рекомендаций!`);
+    });
+</script>
 </body>
 </html>
