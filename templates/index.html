@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DNS Анализатор - Проверка DNS-записей</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🔍 DNS Анализатор</h1>
+            <p class="subtitle">Проверьте все DNS-записи любого доменного имени</p>
+        </header>
+
+        <main>
+            <section class="search-section">
+                <div class="input-group">
+                    <input type="text" id="domainInput" placeholder="example.com" value="google.com">
+                    <button id="checkButton">Проверить DNS</button>
+                </div>
+
+                <div class="loading" id="loadingIndicator">
+                    <div class="spinner"></div>
+                    <p>Получение DNS-записей...</p>
+                </div>
+
+                <div class="error" id="errorMessage"></div>
+            </section>
+
+            <section class="results" id="resultsSection">
+                <h2>Результаты для: <span id="domainName"></span></h2>
+                <div id="dnsRecords"></div>
+            </section>
+        </main>
+
+        <footer>
+            <p>DNS Анализатор &copy; 2023 | Powered by dnspython</p>
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const domainInput = document.getElementById('domainInput');
+            const checkButton = document.getElementById('checkButton');
+            const loadingIndicator = document.getElementById('loadingIndicator');
+            const errorMessage = document.getElementById('errorMessage');
+            const resultsSection = document.getElementById('resultsSection');
+            const domainName = document.getElementById('domainName');
+            const dnsRecords = document.getElementById('dnsRecords');
+
+            async function getDNSRecords(domain) {
+                try {
+                    const response = await fetch('/api/dns-records', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ domain: domain })
+                    });
+
+                    const data = await response.json();
+
+                    if (!response.ok) {
+                        throw new Error(data.error || 'Ошибка сервера');
+                    }
+
+                    return data;
+                } catch (error) {
+                    throw new Error(`Ошибка сети: ${error.message}`);
+                }
+            }
+
+            function displayDNSRecords(result) {
+                domainName.textContent = result.domain;
+                dnsRecords.innerHTML = '';
+
+                if (!result.success) {
+                    errorMessage.textContent = result.errors.join(', ');
+                    errorMessage.style.display = 'block';
+                    return;
+                }
+
+                const recordTypes = {
+                    'A': 'A-записи (IPv4-адреса)',
+                    'AAAA': 'AAAA-записи (IPv6-адреса)',
+                    'MX': 'MX-записи (почтовые серверы)',
+                    'CNAME': 'CNAME-записи (канонические имена)',
+                    'NS': 'NS-записи (серверы имён)',
+                    'TXT': 'TXT-записи (текстовые записи)',
+                    'SOA': 'SOA-запись (информация о зоне)'
+                };
+
+                Object.entries(recordTypes).forEach(([type, description]) => {
+                    const records = result.records[type] || [];
+
+                    if (records.length > 0) {
+                        const recordDiv = document.createElement('div');
+                        recordDiv.className = 'dns-record';
+
+                        const header = document.createElement('div');
+                        header.className = 'record-header';
+
+                        const typeSpan = document.createElement('span');
+                        typeSpan.className = 'record-type';
+                        typeSpan.textContent = description;
+
+                        const countSpan = document.createElement('span');
+                        countSpan.className = 'record-count';
+                        countSpan.textContent = records.length;
+
+                        header.appendChild(typeSpan);
+                        header.appendChild(countSpan);
+
+                        const content = document.createElement('div');
+                        content.className = 'record-content';
+
+                        records.forEach(record => {
+                            const item = document.createElement('div');
+                            item.className = 'record-item';
+
+                            const valueDiv = document.createElement('div');
+                            valueDiv.className = 'record-value';
+                            valueDiv.innerHTML = record.value.replace(/\n/g, '<br>');
+
+                            const ttlSpan = document.createElement('div');
+                            ttlSpan.className = 'record-ttl';
+                            ttlSpan.textContent = `TTL: ${record.ttl} сек`;
+
+                            item.appendChild(valueDiv);
+                            item.appendChild(ttlSpan);
+                            content.appendChild(item);
+                        });
+
+                        header.addEventListener('click', () => {
+                            content.classList.toggle('expanded');
+                        });
+
+                        recordDiv.appendChild(header);
+                        recordDiv.appendChild(content);
+                        dnsRecords.appendChild(recordDiv);
+                    }
+                });
+
+                if (Object.keys(result.records).length === 0) {
+                    dnsRecords.innerHTML = '<p class="no-records">DNS-записи не найдены</p>';
+                }
+
+                resultsSection.style.display = 'block';
+            }
+
+            checkButton.addEventListener('click', async () => {
+                const domain = domainInput.value.trim();
+
+                if (!domain) {
+                    errorMessage.textContent = 'Пожалуйста, введите доменное имя';
+                    errorMessage.style.display = 'block';
+                    return;
+                }
+
+                errorMessage.style.display = 'none';
+                resultsSection.style.display = 'none';
+                loadingIndicator.style.display = 'block';
+
+                try {
+                    const result = await getDNSRecords(domain);
+                    displayDNSRecords(result);
+                } catch (error) {
+                    errorMessage.textContent = error.message;
+                    errorMessage.style.display = 'block';
+                } finally {
+                    loadingIndicator.style.display = 'none';
+                }
+            });
+
+            domainInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    checkButton.click();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
