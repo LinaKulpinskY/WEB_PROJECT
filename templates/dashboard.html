@@ -325,36 +325,279 @@
                 <p>Убедитесь, что все формы на вашем сайте проверяют и фильтруют пользовательский ввод для предотвращения XSS и SQL-инъекций.</p>
             </div>
         </section>
-        <section class="section dns-section">
-            <h2>Настройка DNS-серверов</h2>
-            <p>Использование безопасных DNS-серверов может повысить конфиденциальность и устойчивость вашего интернет-соединения.</p>
+  </html>
+<!-- Добавить в секцию после "Методы самостоятельной проверки" -->
+<section class="section">
+    <h2>Анализ DNS-записей домена</h2>
+    <p>Проверьте DNS-записи любого домена (A, MX, CNAME, TXT и другие записи)</p>
 
-            <form class="dns-form" id="dnsForm">
-                <div class="input-group">
-                    <input type="text" id="dnsServer" placeholder="Введите DNS-сервер (например, 1.1.1.1)" required>
-                    <button type="submit">Добавить DNS-сервер</button>
-                </div>
-            </form>
+    <div class="analysis-form" id="dnsAnalysisForm">
+        <div class="input-group">
+            <input type="text" id="dnsDomain" placeholder="example.com или ya.ru" required>
+            <button type="button" onclick="analyzeDNS()">Анализировать DNS</button>
+        </div>
+    </div>
 
-            <h3>Рекомендуемые DNS-серверы</h3>
-            <div class="dns-servers" id="dnsServersList">
-                <div class="dns-server">
-                    <strong>Cloudflare</strong><br>
-                    1.1.1.1<br>
-                    1.0.0.1
-                </div>
-                <div class="dns-server">
-                    <strong>Google</strong><br>
-                    8.8.8.8<br>
-                    8.8.4.4
-                </div>
-                <div class="dns-server">
-                    <strong>Quad9</strong><br>
-                    9.9.9.9<br>
-                    149.112.112.112
-                </div>
+    <div class="loading" id="dnsLoading">
+        <div class="spinner"></div>
+        <p>Получаю DNS-записи...</p>
+    </div>
+
+    <div class="results" id="dnsResults">
+        <h3>Результаты DNS-анализа</h3>
+
+        <div class="result-item">
+            <div class="result-title">Домен:</div>
+            <div id="dnsDomainName">-</div>
+        </div>
+
+        <div class="result-item">
+            <div class="result-title">Статус:</div>
+            <div id="dnsStatus">-</div>
+        </div>
+
+        <div class="dns-record-category">
+            <h4>A-записи (IPv4 адреса)</h4>
+            <div id="dnsARecords" class="dns-records-list">
+                Загрузка...
             </div>
-        </section>
+        </div>
+
+        <div class="dns-record-category">
+            <h4>AAAA-записи (IPv6 адреса)</h4>
+            <div id="dnsAAAARecords" class="dns-records-list">
+                Загрузка...
+            </div>
+        </div>
+
+        <div class="dns-record-category">
+            <h4>MX-записи (почтовые серверы)</h4>
+            <div id="dnsMXRecords" class="dns-records-list">
+                Загрузка...
+            </div>
+        </div>
+
+        <div class="dns-record-category">
+            <h4>NS-записи (серверы имён)</h4>
+            <div id="dnsNSRecords" class="dns-records-list">
+                Загрузка...
+            </div>
+        </div>
+
+        <div class="dns-record-category">
+            <h4>TXT-записи</h4>
+            <div id="dnsTXTRecords" class="dns-records-list">
+                Загрузка...
+            </div>
+        </div>
+
+        <div class="dns-record-category">
+            <h4>CNAME-записи</h4>
+            <div id="dnsCNAMERecords" class="dns-records-list">
+                Загрузка...
+            </div>
+        </div>
+
+        <div class="dns-record-category">
+            <h4>SOA-запись (информация о зоне)</h4>
+            <div id="dnsSOARecords" class="dns-records-list">
+                Загрузка...
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+.dns-record-category {
+    margin-bottom: 1.5rem;
+    padding: 1rem;
+    background-color: #f8f9fa;
+    border-radius: 6px;
+    border-left: 4px solid #3498db;
+}
+
+.dns-record-category h4 {
+    margin-top: 0;
+    color: #2c3e50;
+    border-bottom: 1px solid #dee2e6;
+    padding-bottom: 0.5rem;
+}
+
+.dns-records-list {
+    font-family: 'Courier New', monospace;
+    background-color: #fff;
+    padding: 0.75rem;
+    border-radius: 4px;
+    border: 1px solid #dee2e6;
+    margin-top: 0.5rem;
+    white-space: pre-wrap;
+    word-break: break-all;
+}
+
+.dns-record-item {
+    padding: 0.5rem;
+    margin: 0.25rem 0;
+    background-color: #f8f9fa;
+    border-radius: 4px;
+    border-left: 3px solid #28a745;
+}
+
+.dns-record-error {
+    color: #dc3545;
+    font-weight: bold;
+}
+
+.dns-record-value {
+    color: #495057;
+    font-weight: normal;
+}
+
+.dns-record-ttl {
+    color: #6c757d;
+    font-size: 0.85em;
+    margin-left: 1rem;
+}
+</style>
+<script>
+function analyzeDNS() {
+    const domain = document.getElementById('dnsDomain').value.trim();
+    const loading = document.getElementById('dnsLoading');
+    const results = document.getElementById('dnsResults');
+
+    if (!domain) {
+        alert('Введите домен для анализа');
+        return;
+    }
+
+    // Показать загрузку
+    loading.style.display = 'block';
+    results.style.display = 'none';
+
+    // Сбросить предыдущие результаты
+    document.getElementById('dnsDomainName').textContent = domain;
+    document.getElementById('dnsStatus').textContent = 'Выполняется запрос...';
+
+    // Отправить запрос на сервер
+    fetch('/api/dns-records', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ domain: domain })
+    })
+    .then(response => response.json())
+    .then(data => {
+        loading.style.display = 'none';
+        results.style.display = 'block';
+
+        if (data.success) {
+            document.getElementById('dnsStatus').innerHTML =
+                '<span style="color: #28a745;">✓ Домен найден</span>';
+
+            // Отобразить все DNS записи
+            displayDNSRecords(data);
+        } else {
+            document.getElementById('dnsStatus').innerHTML =
+                '<span style="color: #dc3545;">✗ Ошибка: ' + (data.error || 'Неизвестная ошибка') + '</span>';
+
+            // Очистить результаты при ошибке
+            clearDNSResults();
+        }
+    })
+    .catch(error => {
+        loading.style.display = 'none';
+        document.getElementById('dnsStatus').innerHTML =
+            '<span style="color: #dc3545;">✗ Ошибка сети: ' + error.message + '</span>';
+        console.error('Ошибка:', error);
+    });
+}
+
+function displayDNSRecords(data) {
+    const records = data.records;
+
+    // A записи
+    displayRecordCategory('dnsARecords', records.A || [], 'A-записи не найдены');
+
+    // AAAA записи
+    displayRecordCategory('dnsAAAARecords', records.AAAA || [], 'AAAA-записи не найдены');
+
+    // MX записи
+    displayRecordCategory('dnsMXRecords', records.MX || [], 'MX-записи не найдены');
+
+    // NS записи
+    displayRecordCategory('dnsNSRecords', records.NS || [], 'NS-записи не найдены');
+
+    // TXT записи
+    displayRecordCategory('dnsTXTRecords', records.TXT || [], 'TXT-записи не найдены');
+
+    // CNAME записи
+    displayRecordCategory('dnsCNAMERecords', records.CNAME || [], 'CNAME-записи не найдены');
+
+    // SOA запись
+    displayRecordCategory('dnsSOARecords', records.SOA || [], 'SOA-запись не найдена');
+
+    // Показать ошибки если есть
+    if (data.errors && data.errors.length > 0) {
+        const errorsDiv = document.createElement('div');
+        errorsDiv.className = 'dns-record-category';
+        errorsDiv.innerHTML = `
+            <h4 style="color: #dc3545;">Ошибки при получении записей:</h4>
+            <div class="dns-records-list">
+                ${data.errors.map(error => `<div class="dns-record-error">${error}</div>`).join('')}
+            </div>
+        `;
+        document.getElementById('dnsResults').appendChild(errorsDiv);
+    }
+}
+
+function displayRecordCategory(elementId, records, emptyMessage) {
+    const element = document.getElementById(elementId);
+
+    if (records.length === 0) {
+        element.innerHTML = `<em>${emptyMessage}</em>`;
+        return;
+    }
+
+    element.innerHTML = records.map(record => {
+        let html = '';
+
+        if (typeof record === 'string') {
+            html = `<div class="dns-record-item">
+                        <span class="dns-record-value">${record}</span>
+                    </div>`;
+        } else if (typeof record === 'object') {
+            if (record.value) {
+                html = `<div class="dns-record-item">
+                            <span class="dns-record-value">${record.value}</span>`;
+
+                if (record.ttl) {
+                    html += `<span class="dns-record-ttl">TTL: ${record.ttl} сек</span>`;
+                }
+
+                if (record.preference && record.exchange) {
+                    html += `<br><small>Приоритет: ${record.preference}, Сервер: ${record.exchange}</small>`;
+                }
+
+                html += `</div>`;
+            }
+        }
+
+        return html;
+    }).join('');
+}
+
+function clearDNSResults() {
+    const categories = [
+        'dnsARecords', 'dnsAAAARecords', 'dnsMXRecords',
+        'dnsNSRecords', 'dnsTXTRecords', 'dnsCNAMERecords',
+        'dnsSOARecords'
+    ];
+
+    categories.forEach(id => {
+        document.getElementById(id).innerHTML = '-';
+    });
+}
+</script>
 
         <div id="instructions"></div>
     <footer>
@@ -364,4 +607,3 @@
         </div>
     </footer>
 </body>
-</html>

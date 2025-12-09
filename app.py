@@ -15,15 +15,168 @@ import uuid
 
 app = Flask(__name__)
 CORS(app)
-
-# Хранилище DNS конфигураций пользователей
 DNS_CONFIGS = {}
-
-# Role configuration for the AI assistant
 role = 'Ты помощник, который помогает с улучшением безопасности сайтов. Пишешь ты легко для понимания, но при этом не теряя смысла и предлагая решения этих проблем. Если вопрос не по теме кибербезопасности и твоей роли, то отвечай: "Вопрос не по теме.", ИНАЧЕ ЧЕЛОВЕКУ БУДЕТ НЕПРИЯТНО И ПЛОХО.'
-
-# Store chat histories per session (in production, use a proper session management)
 chat_histories = {}
+import dns.resolver
+import dns.rdatatype
+from typing import Dict, List, Any
+
+
+class DNSAnalyzer:
+    """Класс для анализа DNS-записей домена"""
+
+    def __init__(self):
+        self.resolver = dns.resolver.Resolver()
+        self.resolver.timeout = 5
+        self.resolver.lifetime = 10
+
+    def get_dns_records(self, domain: str) -> Dict[str, Any]:
+        """
+        Получает все DNS-записи для указанного домена
+        """
+        records = {}
+        errors = []
+
+        record_types = [
+            ('A', 'A-записи (IPv4-адреса)'),
+            ('AAAA', 'AAAA-записи (IPv6-адреса)'),
+            ('MX', 'MX-записи (почтовые серверы)'),
+            ('CNAME', 'CNAME-записи (канонические имена)'),
+            ('NS', 'NS-записи (серверы имён)'),
+            ('TXT', 'TXT-записи (текстовые записи)'),
+            ('SOA', 'SOA-запись (информация о зоне)')
+        ]
+
+        for rtype, description in record_types:
+            try:
+                if rtype == 'SOA':
+                    answers = self.resolver.resolve(domain, rtype)
+                    records[rtype] = self._parse_soa_record(answers)
+                else:
+                    answers = self.resolver.resolve(domain, rtype)
+                    records[rtype] = self._parse_records(answers, rtype)
+
+            except dns.resolver.NoAnswer:
+                records[rtype] = []
+            except dns.resolver.NXDOMAIN:
+                errors.append(f"Домен {domain} не существует")
+                break
+            except dns.resolver.Timeout:
+                errors.append(f"Таймаут при запросе {rtype} записей")
+            except dns.resolver.NoNameservers:
+                errors.append("Не удалось найти серверы имён для домена")
+                break
+            except Exception as e:
+                errors.append(f"Ошибка при получении {rtype} записей: {str(e)}")
+
+        return {
+            'domain': domain,
+            'records': records,
+            'errors': errors,
+            'success': len(errors) == 0
+        }
+
+    def _parse_records(self, answers: dns.resolver.Answer, rtype: str) -> List[Dict]:
+        """Парсит DNS-ответы в структурированный формат"""
+        parsed_records = []
+        response_ttl = answers.rrset.ttl if answers.rrset else 300
+
+        for answer in answers:
+            record_data = {
+                'value': self._format_record_value(answer, rtype),
+                'ttl': response_ttl
+            }
+
+            if rtype == 'MX':
+                record_data['preference'] = answer.preference
+                record_data['exchange'] = str(answer.exchange)
+                record_data['value'] = f"{answer.exchange} (приоритет: {answer.preference})"
+
+            parsed_records.append(record_data)
+
+        return parsed_records
+
+    def _format_record_value(self, answer, rtype: str) -> str:
+        """Форматирует значение записи в зависимости от типа"""
+        if rtype == 'A':
+            return str(answer.address)
+        elif rtype == 'AAAA':
+            return str(answer.address)
+        elif rtype == 'CNAME':
+            return str(answer.target)
+        elif rtype == 'NS':
+            return str(answer.target)
+        elif rtype == 'TXT':
+            if hasattr(answer, 'strings'):
+                return ' '.join([s.decode('utf-8') for s in answer.strings])
+            return str(answer)
+        else:
+            return str(answer)
+
+    def _parse_soa_record(self, answers: dns.resolver.Answer) -> List[Dict]:
+        """Парсит SOA запись в детализированный формат"""
+        parsed_records = []
+        response_ttl = answers.rrset.ttl if answers.rrset else 3600
+
+        for answer in answers:
+            soa_data = {
+                'mname': str(answer.mname),
+                'rname': str(answer.rname),
+                'serial': answer.serial,
+                'refresh': answer.refresh,
+                'retry': answer.retry,
+                'expire': answer.expire,
+                'minimum': answer.minimum,
+                'ttl': response_ttl
+            }
+
+            soa_data['value'] = (
+                f"Основной NS: {soa_data['mname']}\n"
+                f"Email администратора: {soa_data['rname']}\n"
+                f"Серийный номер: {soa_data['serial']}\n"
+                f"Обновление: {soa_data['refresh']} сек\n"
+                f"Повтор: {soa_data['retry']} сек\n"
+                f"Истечение: {soa_data['expire']} сек\n"
+                f"Минимальный TTL: {soa_data['minimum']} сек"
+            )
+
+            parsed_records.append(soa_data)
+
+        return parsed_records
+dns_analyzer = DNSAnalyzer()
+
+
+@app.route('/api/dns-records', methods=['POST'])
+def api_dns_records():
+    """API endpoint для получения DNS-записей"""
+    try:
+        data = request.get_json()
+        domain = data.get('domain', '').strip()
+
+        if not domain:
+            return jsonify({
+                'success': False,
+                'error': 'Не указано доменное имя'
+            }), 400
+        domain = domain.replace('http://', '').replace('https://', '').replace('www.', '')
+        domain = domain.split('/')[0]  # Убираем путь если есть
+
+        print(f"Получен запрос DNS записей для домена: {domain}")
+
+        # Получаем DNS-записи
+        result = dns_analyzer.get_dns_records(domain)
+
+        return jsonify(result)
+
+    except Exception as e:
+        print(f"Ошибка при обработке DNS запроса: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({
+            'success': False,
+            'error': f'Внутренняя ошибка сервера: {str(e)}'
+        }), 500
 
 def get_chat_history(session_id):
     """Get or create chat history for a session"""
@@ -35,17 +188,11 @@ def send_request_gpt(content: str, session_id: str):
     """Send request to GPT using g4f"""
     try:
         BOT_HISTORY = get_chat_history(session_id)
-        
-        # Create client for GPT API
         client = g4f.Client()
-        
-        # Add user message to history
         BOT_HISTORY.append({
             "role": "user", 
             "content": content + " Не добавляй ссылки в ответ. Если вопрос не по теме кибербезопасности и твоей роли, то отвечай: 'Вопрос не по теме.', ИНАЧЕ ЧЕЛОВЕКУ БУДЕТ НЕПРИЯТНО И ПЛОХО."
         })
-        
-        # Get response from GPT
         response = client.chat.completions.create(
             model="gpt-4",
             messages=BOT_HISTORY,
@@ -53,11 +200,7 @@ def send_request_gpt(content: str, session_id: str):
         )
         
         answer = response.choices[0].message.content
-        
-        # Add assistant response to history
         BOT_HISTORY.append({"role": "assistant", "content": answer})
-        
-        # Clean answer from links
         answer = re.sub(r'http\S+', '', answer)  # Remove URLs
         answer = re.sub(r'www\.\S+', '', answer)  # Remove www links
         
@@ -88,8 +231,6 @@ def chat_api():
         
         if not message:
             return jsonify({'error': 'Message is required'}), 400
-        
-        # Call the function directly (not async in newer g4f versions)
         response = send_request_gpt(message, session_id)
         
         return jsonify({'response': response})
@@ -180,24 +321,17 @@ def parse_sucuri_results(data, scan_url, html_content=None):
             elif result['security_level'] == 'unknown':
                 result['security_level'] = 'medium'
                 result['security_score'] = 60
-            
-            # Generate recommendations
             result['recommendations'] = generate_security_recommendations(result)
-            
-        # Alternative: if data structure is different, try to parse it
         elif isinstance(data, dict):
-            # Try to extract information from various possible structures
             if 'malware' in data or 'Malware' in data:
                 result['malware_detected'] = True
                 result['security_level'] = 'critical'
                 result['security_score'] = 20
-            
             if 'blacklist' in data or 'Blacklist' in data:
                 result['blacklisted'] = True
                 if result['security_level'] != 'critical':
                     result['security_level'] = 'high'
                 result['security_score'] = min(result['security_score'], 40)
-            
             result['recommendations'] = generate_security_recommendations(result)
         
     except Exception as e:
@@ -234,8 +368,6 @@ def generate_security_recommendations(result):
             'title': 'Подайте запрос на удаление из черных списков',
             'description': 'После очистки сайта от вредоносного ПО подайте запрос на удаление из черных списков в соответствующих сервисах.'
         })
-    
-    # General recommendations
     recommendations.append({
         'priority': 'medium',
         'title': 'Установите SSL-сертификат',
@@ -329,8 +461,7 @@ def scan_website_with_sucuri(url):
                     return parse_sucuri_results({}, scan_url, html_content)
             except:
                 continue
-        
-        # If API doesn't work, try scraping the HTML results page
+
         try:
             results_url = f'https://sitecheck.sucuri.net/results/{scan_url}'
             html_response = requests.get(results_url, headers=headers, timeout=60)
