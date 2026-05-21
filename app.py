@@ -32,42 +32,24 @@ def get_chat_history(session_id):
 
 def send_request_gpt(content: str, session_id: str):
     """Send request to GPT using g4f"""
+    from chat_ai import create_chat_response, friendly_chat_error
+
     try:
-        import g4f
+        bot_history = get_chat_history(session_id)
 
-        BOT_HISTORY = get_chat_history(session_id)
-
-        # Create client for GPT API
-        client = g4f.Client()
-
-        # Add user message to history
-        BOT_HISTORY.append({
+        bot_history.append({
             "role": "user",
             "content": content + " Не добавляй ссылки в ответ. Если вопрос не по теме кибербезопасности и твоей роли, то отвечай: 'Вопрос не по теме.', ИНАЧЕ ЧЕЛОВЕКУ БУДЕТ НЕПРИЯТНО И ПЛОХО."
         })
 
-        # Get response from GPT
-        response = client.chat.completions.create(
-            model="gpt-4",
-            messages=BOT_HISTORY,
-            web_search=False
-        )
-
-        answer = response.choices[0].message.content
-
-        # Add assistant response to history
-        BOT_HISTORY.append({"role": "assistant", "content": answer})
-
-        # Clean answer from links
-        answer = re.sub(r'http\S+', '', answer)  # Remove URLs
-        answer = re.sub(r'www\.\S+', '', answer)  # Remove www links
-
+        answer = create_chat_response(bot_history)
+        bot_history.append({"role": "assistant", "content": answer})
         return answer
     except Exception as e:
         print(f'error\n{str(e)}')
         import traceback
         traceback.print_exc()
-        return f"Произошла ошибка: {str(e)}"
+        return friendly_chat_error(e)
 
 
 @app.route('/')
