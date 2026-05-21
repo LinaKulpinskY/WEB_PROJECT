@@ -317,7 +317,7 @@
         <form class="dns-form" id="dnsForm">
             <div class="input-group">
                 <input type="text" id="dnsServer" placeholder="Введите DNS-сервер (например, 1.1.1.1)" required>
-                <button type="submit">Добавить DNS-сервер</button>
+                <button type="submit">Добавить локальный DNS-сервер</button>
             </div>
         </form>
 
@@ -341,7 +341,7 @@
         </div>
     </section>
 <section class="section" style="text-align: center;">
-    <h2 style="text-align: left;">Загрузите DNS конфигурацию</h2>
+    <h2 style="text-align: left;">Загрузите локальную DNS конфигурацию</h2>
     <p style="text-align: center; max-width: 600px; margin: 0 auto 20px auto;">
         <em>DNS конфигурация - это файл с настройками того, КАК должен работать DNS сервер</em>
     </p>
@@ -350,18 +350,18 @@
         <textarea id="dnsCode" placeholder="Пример: address /ads.example.com/0.0.0.0, nameserver 8.8.8.8"
         style="width: 100%; max-width: 500px; min-height: 200px; text-align: center; font-family: 'Courier New', monospace; padding: 15px;"></textarea>
 
-        <button onclick="uploadDNS()">Загрузить DNS конфигурацию</button>
+        <button onclick="uploadDNS()">Загрузить локальную DNS конфигурацию</button>
         <div id="status" style="text-align: center;"></div>
     </div>
 </section>
 
     <section class="section" style="text-align: center;">
-    <h2 style="text-align: left;">Подключиться к DNS серверу</h2>
+    <h2 style="text-align: left;">Подключиться к локальному DNS серверу</h2>
     <p style="text-align: center; max-width: 600px; margin: 0 auto 20px auto;"><em>DNS сервер - это ПРОГРАММА, которая работает на основе вашей конфигурации и обрабатывает запросы</em></p>
 
     <div style="display: flex; flex-direction: column; align-items: center; gap: 15px;">
         <input type="text" id="userId" placeholder="Введите ваш ID пользователя" style="text-align: center;">
-        <button onclick="connectToDNS()">Подключиться к DNS</button>
+        <button onclick="connectToDNS()">Подключиться к локальному DNS</button>
         <div id="connectionStatus"></div>
     </div>
 </section>
@@ -395,7 +395,7 @@
 
 <footer>
     <div class="container">
-        <p>&copy; 2023 Анализатор безопасности веб-сайтов. Все права защищены.</p>
+        <p>&copy; 2025 Анализатор безопасности веб-сайтов. Все права защищены.</p>
         <p>ГБОУ г. Москвы «Школа № 1501»</p>
     </div>
 </footer>
