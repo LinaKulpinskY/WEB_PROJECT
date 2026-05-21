@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Чат с AI-помощником - Анализатор безопасности</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --accent-color: #e74c3c;
+            --light-color: #ecf0f1;
+            --dark-color: #34495e;
+            --success-color: #27ae60;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--primary-color), var(--dark-color));
+            color: white;
+            padding: 1.5rem 0;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .header-content {
+            width: 90%;
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        h1 {
+            font-size: 2rem;
+        }
+
+        .nav-link {
+            color: white;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+        }
+
+        .nav-link:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .chat-container {
+            flex: 1;
+            width: 90%;
+            max-width: 1200px;
+            margin: 2rem auto;
+            display: flex;
+            flex-direction: column;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .message {
+            display: flex;
+            gap: 1rem;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message.user {
+            justify-content: flex-end;
+        }
+
+        .message-content {
+            max-width: 70%;
+            padding: 1rem 1.5rem;
+            border-radius: 18px;
+            word-wrap: break-word;
+        }
+
+        .message.user .message-content {
+            background-color: var(--secondary-color);
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+
+        .message.assistant .message-content {
+            background-color: var(--light-color);
+            color: var(--dark-color);
+            border-bottom-left-radius: 4px;
+        }
+
+        .message-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+
+        .message.user .message-avatar {
+            background-color: var(--secondary-color);
+            color: white;
+        }
+
+        .message.assistant .message-avatar {
+            background-color: var(--dark-color);
+            color: white;
+        }
+
+        .chat-input-container {
+            border-top: 1px solid #ddd;
+            padding: 1.5rem;
+            background-color: #f9f9f9;
+        }
+
+        .chat-form {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 0.75rem 1rem;
+            border: 1px solid #ddd;
+            border-radius: 24px;
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .chat-input:focus {
+            border-color: var(--secondary-color);
+        }
+
+        .send-button {
+            background-color: var(--secondary-color);
+            color: white;
+            border: none;
+            padding: 0.75rem 2rem;
+            border-radius: 24px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background-color 0.3s;
+            font-weight: 500;
+        }
+
+        .send-button:hover:not(:disabled) {
+            background-color: #2980b9;
+        }
+
+        .send-button:disabled {
+            background-color: #bdc3c7;
+            cursor: not-allowed;
+        }
+
+        .loading-indicator {
+            display: none;
+            padding: 1rem;
+            text-align: center;
+            color: var(--dark-color);
+        }
+
+        .loading-indicator.active {
+            display: block;
+        }
+
+        .spinner {
+            border: 3px solid rgba(0, 0, 0, 0.1);
+            border-left-color: var(--secondary-color);
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            margin-right: 0.5rem;
+            vertical-align: middle;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .welcome-message {
+            text-align: center;
+            color: var(--dark-color);
+            padding: 2rem;
+        }
+
+        .welcome-message h2 {
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            h1 {
+                font-size: 1.5rem;
+            }
+
+            .message-content {
+                max-width: 85%;
+            }
+
+            .chat-form {
+                flex-direction: column;
+            }
+
+            .send-button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <h1>Чат с AI-помощником</h1>
+            <a href="/" class="nav-link">Главная страница</a>
+        </div>
+    </header>
+
+    <div class="chat-container">
+        <div class="chat-messages" id="chatMessages">
+            <div class="welcome-message">
+                <h2>Добро пожаловать!</h2>
+                <p>Я ваш AI-помощник по кибербезопасности. Задайте мне вопросы о безопасности веб-сайтов, и я постараюсь помочь вам с практическими рекомендациями.</p>
+            </div>
+        </div>
+
+        <div class="loading-indicator" id="loadingIndicator">
+            <div class="spinner"></div>
+            <span>Помощник печатает...</span>
+        </div>
+
+        <div class="chat-input-container">
+            <form class="chat-form" id="chatForm">
+                <input 
+                    type="text" 
+                    class="chat-input" 
+                    id="messageInput" 
+                    placeholder="Введите ваш вопрос о кибербезопасности..."
+                    required
+                    autocomplete="off"
+                >
+                <button type="submit" class="send-button" id="sendButton">Отправить</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const chatMessages = document.getElementById('chatMessages');
+        const chatForm = document.getElementById('chatForm');
+        const messageInput = document.getElementById('messageInput');
+        const sendButton = document.getElementById('sendButton');
+        const loadingIndicator = document.getElementById('loadingIndicator');
+        
+        // Generate a simple session ID (in production, use proper session management)
+        const sessionId = 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+
+        // Remove welcome message when first message is sent
+        let isFirstMessage = true;
+
+        function addMessage(content, isUser) {
+            // Remove welcome message if it's the first user message
+            if (isFirstMessage && isUser) {
+                const welcomeMessage = chatMessages.querySelector('.welcome-message');
+                if (welcomeMessage) {
+                    welcomeMessage.remove();
+                }
+                isFirstMessage = false;
+            }
+
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${isUser ? 'user' : 'assistant'}`;
+
+            const avatar = document.createElement('div');
+            avatar.className = 'message-avatar';
+            avatar.textContent = isUser ? 'В' : 'AI';
+
+            const messageContent = document.createElement('div');
+            messageContent.className = 'message-content';
+            
+            // Format message content (preserve line breaks)
+            messageContent.innerHTML = content.replace(/\n/g, '<br>');
+
+            if (isUser) {
+                messageDiv.appendChild(messageContent);
+                messageDiv.appendChild(avatar);
+            } else {
+                messageDiv.appendChild(avatar);
+                messageDiv.appendChild(messageContent);
+            }
+
+            chatMessages.appendChild(messageDiv);
+            
+            // Scroll to bottom
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        async function sendMessage(message) {
+            // Add user message to chat
+            addMessage(message, true);
+            
+            // Clear input
+            messageInput.value = '';
+            
+            // Disable input and button
+            messageInput.disabled = true;
+            sendButton.disabled = true;
+            loadingIndicator.classList.add('active');
+
+            try {
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        message: message,
+                        session_id: sessionId
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    addMessage(data.response, false);
+                } else {
+                    addMessage('Произошла ошибка: ' + (data.error || 'Неизвестная ошибка'), false);
+                }
+            } catch (error) {
+                addMessage('Произошла ошибка при отправке сообщения: ' + error.message, false);
+            } finally {
+                // Re-enable input and button
+                messageInput.disabled = false;
+                sendButton.disabled = false;
+                loadingIndicator.classList.remove('active');
+                messageInput.focus();
+            }
+        }
+
+        chatForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const message = messageInput.value.trim();
+            if (message) {
+                await sendMessage(message);
+            }
+        });
+
+        // Focus input on load
+        messageInput.focus();
+
+        // Allow sending with Enter (default behavior) and handle Enter+Shift for new line
+        messageInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                chatForm.dispatchEvent(new Event('submit'));
+            }
+        });
+    </script>
+</body>
+</html>
+

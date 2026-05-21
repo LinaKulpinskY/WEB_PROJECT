@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Результаты анализа безопасности - {{ url }}</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --accent-color: #e74c3c;
+            --light-color: #ecf0f1;
+            --dark-color: #34495e;
+            --success-color: #27ae60;
+            --warning-color: #f39c12;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--primary-color), var(--dark-color));
+            color: white;
+            padding: 1.5rem 0;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .header-content {
+            width: 90%;
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        h1 {
+            font-size: 2rem;
+        }
+
+        .nav-link {
+            color: white;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+            margin-left: 1rem;
+        }
+
+        .nav-link:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .container {
+            width: 90%;
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 2rem 0;
+        }
+
+        .section {
+            background: white;
+            border-radius: 8px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        h2 {
+            font-size: 2rem;
+            margin-bottom: 1.5rem;
+            color: var(--primary-color);
+            border-bottom: 2px solid var(--secondary-color);
+            padding-bottom: 0.5rem;
+        }
+
+        h3 {
+            font-size: 1.5rem;
+            margin: 1.5rem 0 1rem;
+            color: var(--dark-color);
+        }
+
+        .url-display {
+            background-color: var(--light-color);
+            padding: 1rem;
+            border-radius: 4px;
+            margin-bottom: 2rem;
+            font-size: 1.1rem;
+        }
+
+        .url-display strong {
+            color: var(--primary-color);
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            font-weight: bold;
+            margin: 0.5rem 0;
+        }
+
+        .status-safe {
+            background-color: var(--success-color);
+            color: white;
+        }
+
+        .status-warning {
+            background-color: var(--warning-color);
+            color: white;
+        }
+
+        .status-danger {
+            background-color: var(--accent-color);
+            color: white;
+        }
+
+        .status-info {
+            background-color: var(--secondary-color);
+            color: white;
+        }
+
+        .result-item {
+            margin-bottom: 1.5rem;
+            padding: 1rem;
+            background-color: #f9f9f9;
+            border-radius: 4px;
+            border-left: 4px solid var(--secondary-color);
+        }
+
+        .result-title {
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+            color: var(--dark-color);
+            font-size: 1.1rem;
+        }
+
+        .result-content {
+            margin-top: 0.5rem;
+        }
+
+        .result-content ul {
+            margin-left: 1.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .result-content li {
+            margin-bottom: 0.5rem;
+        }
+
+        .blacklist-item {
+            padding: 0.5rem;
+            margin: 0.5rem 0;
+            border-radius: 4px;
+        }
+
+        .blacklist-clean {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .blacklist-listed {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+
+        .error-message {
+            background-color: #f8d7da;
+            color: #721c24;
+            padding: 1rem;
+            border-radius: 4px;
+            margin: 1rem 0;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-left-color: var(--secondary-color);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .scan-again {
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 1px solid #ddd;
+        }
+
+        .scan-form {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .scan-form input {
+            flex: 1;
+            padding: 0.75rem 1rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+
+        .scan-form button {
+            background-color: var(--secondary-color);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background-color 0.3s;
+        }
+
+        .scan-form button:hover {
+            background-color: #2980b9;
+        }
+
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            h1 {
+                font-size: 1.5rem;
+            }
+
+            .scan-form {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <h1>Результаты анализа безопасности</h1>
+            <div>
+                <a href="/" class="nav-link">Главная</a>
+                <a href="/chat" class="nav-link">Чат с AI</a>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        {% if url %}
+        <div class="section">
+            <div class="url-display">
+                <strong>Анализируемый сайт:</strong> {{ url }}
+            </div>
+        </div>
+        {% endif %}
+
+        {% if error %}
+        <div class="section">
+            <div class="error-message">
+                <h3>Ошибка</h3>
+                <p>{{ error }}</p>
+            </div>
+        </div>
+        {% elif results %}
+            {% if results.error %}
+            <div class="section">
+                <div class="error-message">
+                    <h3>Ошибка при сканировании</h3>
+                    <p>{{ results.error }}</p>
+                </div>
+            </div>
+            {% else %}
+            <div class="section">
+                <h2>Результаты сканирования безопасности</h2>
+
+                <!-- Security Level and Score -->
+                <div class="result-item" style="border-left: 4px solid {% if results.security_level == 'good' %}var(--success-color){% elif results.security_level == 'critical' %}var(--accent-color){% elif results.security_level == 'high' %}var(--warning-color){% else %}var(--secondary-color){% endif %};">
+                    <div class="result-title">Уровень безопасности</div>
+                    <div class="result-content">
+                        {% if results.security_level == 'good' %}
+                            <span class="status-badge status-safe">Хороший</span>
+                        {% elif results.security_level == 'critical' %}
+                            <span class="status-badge status-danger">Критический</span>
+                        {% elif results.security_level == 'high' %}
+                            <span class="status-badge status-warning">Высокий риск</span>
+                        {% elif results.security_level == 'medium' %}
+                            <span class="status-badge status-info">Средний</span>
+                        {% else %}
+                            <span class="status-badge status-info">Неизвестно</span>
+                        {% endif %}
+                        
+                        {% if results.security_score %}
+                        <div style="margin-top: 1rem;">
+                            <p><strong>Оценка безопасности:</strong> {{ results.security_score }}/100</p>
+                            <div style="width: 100%; background-color: #e0e0e0; border-radius: 4px; height: 25px; margin-top: 0.5rem;">
+                                <div class="bar" style="width: {{ results.security_score }}%; background-color: {{ results.security_color if results.security_color else '#3498db' }}; height: 100%; border-radius: 4px; transition: width 0.3s;"></div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Malware Detection -->
+                {% if results.malware_detected %}
+                <div class="result-item" style="border-left-color: var(--accent-color);">
+                    <div class="result-title">⚠️ Обнаружено вредоносное ПО</div>
+                    <div class="result-content">
+                        <p style="color: var(--accent-color); font-weight: bold;">ВНИМАНИЕ: На сайте обнаружено вредоносное ПО!</p>
+                        {% if results.malware_details %}
+                        <ul style="margin-top: 0.5rem;">
+                            {% for detail in results.malware_details %}
+                            <li>{{ detail }}</li>
+                            {% endfor %}
+                        </ul>
+                        {% endif %}
+                    </div>
+                </div>
+                {% else %}
+                <div class="result-item" style="border-left-color: var(--success-color);">
+                    <div class="result-title">✓ Вредоносное ПО не обнаружено</div>
+                    <div class="result-content">
+                        <p style="color: var(--success-color);">Сайт не содержит известного вредоносного ПО.</p>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Blacklist Status -->
+                {% if results.blacklisted %}
+                <div class="result-item" style="border-left-color: var(--warning-color);">
+                    <div class="result-title">⚠️ Статус черных списков</div>
+                    <div class="result-content">
+                        <p style="color: var(--warning-color); font-weight: bold;">Сайт находится в одном или нескольких черных списках</p>
+                        {% if results.blacklists %}
+                        <div style="margin-top: 1rem;">
+                            {% for engine, status in results.blacklists.items() %}
+                                {% if status %}
+                                <div class="blacklist-item blacklist-listed">
+                                    <strong>{{ engine }}</strong>: В черном списке
+                                </div>
+                                {% else %}
+                                <div class="blacklist-item blacklist-clean">
+                                    <strong>{{ engine }}</strong>: Не в черном списке
+                                </div>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% elif results.blacklists %}
+                <div class="result-item" style="border-left-color: var(--success-color);">
+                    <div class="result-title">✓ Статус черных списков</div>
+                    <div class="result-content">
+                        <p style="color: var(--success-color);">Сайт не находится в известных черных списках</p>
+                        {% for engine, status in results.blacklists.items() %}
+                            <div class="blacklist-item blacklist-clean">
+                                <strong>{{ engine }}</strong>: Не в черном списке
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Issues -->
+                {% if results.issues %}
+                <div class="result-item">
+                    <div class="result-title">Обнаруженные проблемы</div>
+                    <div class="result-content">
+                        <ul>
+                            {% for issue in results.issues %}
+                            <li style="color: var(--accent-color);">{{ issue }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+                {% endif %}
+
+
+
+                <!-- Recommendations -->
+                {% if results.recommendations %}
+                <div class="result-item" style="background-color: #e8f4fc; border-left-color: var(--secondary-color);">
+                    <div class="result-title" style="font-size: 1.3rem; margin-bottom: 1rem;">💡 Рекомендации по улучшению безопасности</div>
+                    <div class="result-content">
+                        {% for rec in results.recommendations %}
+                        <div style="margin-bottom: 1.5rem; padding: 1rem; background-color: white; border-radius: 4px; border-left: 3px solid {% if rec.priority == 'critical' %}var(--accent-color){% elif rec.priority == 'high' %}var(--warning-color){% elif rec.priority == 'medium' %}var(--secondary-color){% else %}#95a5a6{% endif %};">
+                            <div style="display: flex; align-items: center; margin-bottom: 0.5rem;">
+                                <span style="padding: 0.25rem 0.5rem; border-radius: 3px; font-size: 0.8rem; font-weight: bold; margin-right: 0.5rem; background-color: {% if rec.priority == 'critical' %}var(--accent-color){% elif rec.priority == 'high' %}var(--warning-color){% elif rec.priority == 'medium' %}var(--secondary-color){% else %}#95a5a6{% endif %}; color: white;">
+                                    {% if rec.priority == 'critical' %}КРИТИЧНО
+                                    {% elif rec.priority == 'high' %}ВЫСОКИЙ ПРИОРИТЕТ
+                                    {% elif rec.priority == 'medium' %}СРЕДНИЙ ПРИОРИТЕТ
+                                    {% else %}НИЗКИЙ ПРИОРИТЕТ
+                                    {% endif %}
+                                </span>
+                                <strong style="font-size: 1.1rem;">{{ rec.title }}</strong>
+                            </div>
+                            <p style="margin-top: 0.5rem; color: var(--dark-color);">{{ rec.description }}</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Additional link to Sucuri if available -->
+                {% if results.sucuri_url %}
+                <div class="result-item" style="background-color: #f9f9f9;">
+                    <div class="result-title">Дополнительная информация</div>
+                    <div class="result-content">
+                        <p>Для более подробной информации вы можете посетить оригинальный отчет Sucuri SiteCheck:</p>
+                        <p style="margin-top: 0.5rem;">
+                            <a href="{{ results.sucuri_url }}" target="_blank" 
+                               style="color: var(--secondary-color); text-decoration: underline;">
+                                Открыть отчет на Sucuri SiteCheck →
+                            </a>
+                        </p>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            {% endif %}
+        {% else %}
+        <div class="section">
+            <div class="loading">
+                <div class="spinner"></div>
+                <p>Сканирование выполняется, пожалуйста подождите...</p>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="section scan-again">
+            <h3>Проверить другой сайт</h3>
+            <form class="scan-form" action="/scan" method="POST">
+                <input type="url" name="url" placeholder="https://example.com" required>
+                <button type="submit">Проанализировать</button>
+            </form>
+        </div>
+    </div>
+</body>
+</html>
+
