@@ -1,19 +1,14 @@
-from flask import Flask, render_template, request, jsonify, redirect, url_for
+from flask import Flask, render_template, request, jsonify
 from flask_cors import CORS
-import g4f
 import re
 import requests
 import json
-from urllib.parse import quote, urlparse
+import socket
+from urllib.parse import urlparse
 from bs4 import BeautifulSoup
-from flask import Flask, request, jsonify, render_template_string
-import json
-import os
-import subprocess
 from datetime import datetime
 import uuid
 import time
-import random
 
 app = Flask(__name__)
 CORS(app)
@@ -38,6 +33,8 @@ def get_chat_history(session_id):
 def send_request_gpt(content: str, session_id: str):
     """Send request to GPT using g4f"""
     try:
+        import g4f
+
         BOT_HISTORY = get_chat_history(session_id)
 
         # Create client for GPT API
@@ -718,6 +715,37 @@ def connect_dns():
             'config_preview': dns_config['dns_preview']
         })
 
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
+
+
+@app.route('/test-dns', methods=['POST'])
+def test_dns():
+    """Проверка DNS-конфигурации пользователя"""
+    try:
+        data = request.get_json() or {}
+        user_id = data.get('user_id', '').strip()
+        domain = (data.get('domain') or 'google.com').strip()
+
+        if not user_id:
+            return jsonify({'success': False, 'error': 'ID пользователя не указан'})
+
+        if user_id not in DNS_CONFIGS:
+            return jsonify({'success': False, 'error': 'DNS конфигурация не найдена. Сначала загрузите конфигурацию.'})
+
+        started = time.time()
+        ip = socket.gethostbyname(domain)
+        elapsed_ms = int((time.time() - started) * 1000)
+
+        return jsonify({
+            'success': True,
+            'domain': domain,
+            'ip': ip,
+            'response_time': elapsed_ms,
+            'dns_server': DNS_CONFIGS[user_id]['dns_server'],
+        })
+    except socket.gaierror as e:
+        return jsonify({'success': False, 'error': f'Не удалось разрешить домен: {e}'})
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)})
 

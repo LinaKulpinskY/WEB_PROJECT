@@ -347,15 +347,7 @@
     </p>
 
     <div style="display: flex; flex-direction: column; align-items: center; gap: 15px;">
-        <textarea id="dnsCode" placeholder="Пример DNS конфигурации:
-address /ads.example.com/0.0.0.0
-address /tracking.example.com/0.0.0.0
-
-address /mywebsite.local/192.168.1.100
-address /api.local/192.168.1.101
-
-nameserver 8.8.8.8
-nameserver 1.1.1.1"
+        <textarea id="dnsCode" placeholder="Пример: address /ads.example.com/0.0.0.0, nameserver 8.8.8.8"
         style="width: 100%; max-width: 500px; min-height: 200px; text-align: center; font-family: 'Courier New', monospace; padding: 15px;"></textarea>
 
         <button onclick="uploadDNS()">Загрузить DNS конфигурацию</button>

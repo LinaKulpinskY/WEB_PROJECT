@@ -1,14 +1,13 @@
-import g4f
 import re
-import asyncio
 
 role = 'Ты помощник, который помогает с улучшением безопасности сайтов. Пишешь ты легко для понимания, но при этом не теряя смысла и предлагая решения этих проблем. Если вопрос не по теме кибербезопасности и твоей роли, то отвечай: "Вопрос не по теме.", ИНАЧЕ ЧЕЛОВЕКУ БУДЕТ НЕПРИЯТНО И ПЛОХО.'
 BOT_HISTORY = [{"role": "system", "content": role}]
 
 
-async def send_request_gpt(content: str):
+def send_request_gpt(content: str):
     try:
-        # Создаём клиента, настраивающего связь с GPT API
+        import g4f
+
         client = g4f.Client()
         # Как только связь с GPT будет настроена
         # Указываем в запросе модель GPT, которую будем использовать
@@ -30,7 +29,10 @@ async def send_request_gpt(content: str):
         return answer
     except Exception as e:
         print('error\n' + str(e))
+        return f"Произошла ошибка: {str(e)}"
 
 
 if __name__ == "__main__":
-    result = asyncio.run(send_request_gpt(input()))
+    result = send_request_gpt(input())
+    if result:
+        print(result)
